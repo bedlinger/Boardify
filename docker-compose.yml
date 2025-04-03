@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./BoardifyBackend
+    command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 main:app
+    networks:
+      - net
+    volumes:
+      - ./BoardifyBackend/database.db:/app/database.db
+    expose:
+      - 8000
+    restart: always
+  frontend:
+    build: ./Boardify
+    ports:
+      - 8080:8080
+    networks:
+      - net
+    volumes:
+      - ./Boardify/wwwroot:/app/wwwroot
+    environment:
+      - VIRTUAL_HOST=boardify.llist.at
+      - VIRTUAL_PORT=8080
+      - BackendUri=http://backend:8000
+    restart: always
+    depends_on:
+      - backend
+
+networks:
+  net:
+    external: true

@@ -1,0 +1,18 @@
+{
+  "name": "boardify",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i ./wwwroot/main.css -o ./wwwroot/app.css",
+    "watch": "npx @tailwindcss/cli -i ./wwwroot/main.css -o ./wwwroot/app.css --watch",
+    "release": "npx @tailwindcss/cli -i ./wwwroot/main.css -o ./wwwroot/app.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.1",
+    "tailwindcss": "^4.0.16"
+  }
+}

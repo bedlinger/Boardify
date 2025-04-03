@@ -1,0 +1,61 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject BackendService BackendService
+
+<PageTitle>Boardify</PageTitle>
+
+<div class="mb-6 flex items-center justify-between">
+    <h1 class="text-5xl font-bold">Boardify</h1>
+    <a href="/add" class="btn btn-primary flex">
+        <span class="material-icons">
+            add
+        </span>
+        Board erstellen
+    </a>
+</div>
+
+<div class="flex flex-col gap-3">
+    @foreach(var board in boards)
+    {
+        var id = board.Id;
+        <div class="relative">
+            <a href="/board/@board.Id" class="flex items-center justify-between rounded-md p-4 shadow-md hover:shadow-lg">
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold">@board.Name</span>
+                    <span class="text-gray-400">@board.TicketsCount Tickets, davon @board.DoneTicketsCount erledigt</span>
+                </div>
+            </a>
+            <div class="absolute top-2 right-2">
+                <details class="dropdown">
+                    <summary class="btn btn-circle btn-ghost">
+                        <span class="material-icons">
+                            more_vert
+                        </span>
+                    </summary>
+                    <ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                        <li>
+                            <button class="text-red-700" @onclick="() => Delete(id)">Löschen</button>
+                        </li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<BoardOverview> boards = new List<BoardOverview>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        boards = await BackendService.GetBoardsOverview();
+    }
+
+    async void Delete(string id)
+    {
+        await BackendService.DeleteBoard(id);
+        boards.RemoveAll(b => b.Id == id);
+        StateHasChanged();
+    }
+}

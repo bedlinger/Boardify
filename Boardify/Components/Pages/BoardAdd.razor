@@ -1,0 +1,70 @@
+﻿@page "/add"
+@rendermode InteractiveServer
+@inject BackendService BackendService
+@inject NavigationManager NavigationManager
+
+<a href="/" class="btn btn-outline btn-primary btn-sm mb-2">
+    <span class="material-icons">
+        arrow_back
+    </span>
+    Zurück
+</a>
+<h2 class="mb-6 text-3xl font-bold">Board erstellen</h2>
+
+<form @onsubmit="Submit">
+    <fieldset class="fieldset">
+        <label class="fieldset-legend" for="name">Name</label>
+        <InputText @bind-Value="board.Name" type="text" class="input !w-full" placeholder="Z.B. To-dos" id="name" required />
+    </fieldset>
+
+    <fieldset class="fieldset">
+        <span class="fieldset-legend">Stages</span>
+        @for (int i = 0; i < board.Stages.Count; i++)
+        {
+            int buffer = i;
+            <div class="flex items-center gap-2">
+                <label for=@i class="ml-4 w-4">@(i + 1).</label>
+                <InputText @bind-Value="board.Stages[buffer].Name" type="text" class="input" id="@i" />
+                <button type="button" href="/add" class="btn btn-error btn-soft btn-circle material-icons" @onclick="() => RemoveStage(buffer)">
+                    remove
+                </button>
+            </div>
+        }
+        <div>
+            <button type="button" class="btn btn-primary btn-sm btn-soft ml-10 w-80" @onclick="AddStage">
+                <span class="material-icons">
+                    add
+                </span>
+                Hinzufügen
+            </button>
+        </div>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary mt-4 w-full">Erstellen</button>  
+</form>
+
+
+@code {
+    private BoardCreate board = new BoardCreate()
+        {
+            Name = "",
+            Stages = [
+                new Stage() { Nr=0, Name = "To-Do" },
+                new Stage() { Nr=1, Name = "In Arbeit" },
+                new Stage() { Nr=2, Name = "Erledigt" }
+            ]
+        };
+
+    private void AddStage() {
+        board.Stages.Add(new Stage() { Nr = board.Stages.Max(s => s.Nr)+1, Name = "" });
+    }
+
+    private void RemoveStage(int index) {
+        board.Stages.RemoveAt(index);
+    }
+
+    private async void Submit() {
+        var createdBoard = await BackendService.CreateBoard(board);
+        NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
+    }
+}

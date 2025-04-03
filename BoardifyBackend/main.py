@@ -1,0 +1,99 @@
+from typing import Annotated
+
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy import func
+from sqlmodel import Session, select
+
+from database import create_db_and_tables, get_session
+from schemas import *
+
+app = FastAPI()
+
+DbSession = Annotated[Session, Depends(get_session)]
+
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
+@app.get("/boards", response_model=list[BoardOverview])
+async def read_boards(session: DbSession):
+    results = session.exec(
+        select(
+            Board,
+            func.count(Ticket.id).label("total_tickets"),
+            func.count(func.nullif(Ticket.is_done, False)).label("done_tickets")
+        )
+        .join(Ticket, isouter=True)
+        .group_by(Board.id)
+    ).all()
+
+    boards = []
+    for board, total_tickets, done_tickets in results:
+        board_data = BoardOverview(**board.model_dump(), tickets_count=total_tickets, done_tickets_count=done_tickets)
+        boards.append(board_data)
+
+    return boards
+
+
+@app.get("/boards/{board_id}", response_model=BoardPublic)
+async def read_board(board_id: uuid.UUID, session: DbSession):
+    board = session.get(Board, board_id)
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+    return board
+
+
+@app.post("/boards", response_model=BoardPublic)
+def create_board(board: BoardCreate, session: DbSession):
+    db_board = Board(**board.model_dump(exclude={'stages'}))
+    db_board.stages = [Stage(**stage.model_dump(), board_id=db_board.id) for stage in board.stages]
+    session.add(db_board)
+    session.commit()
+    session.refresh(db_board)
+    return db_board
+
+
+@app.delete("/boards/{board_id}")
+def delete_board(board_id: uuid.UUID, session: DbSession):
+    board = session.get(Board, board_id)
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+    session.delete(board)
+    session.commit()
+    return {}
+
+
+@app.post("/tickets", response_model=TicketPublic)
+def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession):
+    db_ticket = Ticket.model_validate(ticket)
+    db_ticket.board_id = board_id
+    session.add(db_ticket)
+    session.commit()
+    session.refresh(db_ticket)
+    return db_ticket
+
+
+@app.patch("/tickets/{ticket_id}", response_model=TicketPublic)
+def update_ticket(ticket_id: uuid.UUID, ticket: TicketStageUpdate, session: DbSession):
+    ticket_db = session.get(Ticket, ticket_id)
+    if not ticket_db:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    ticket_db.is_done = ticket.stage_nr == max([s.nr for s in ticket_db.board.stages])
+    ticket_data = ticket.model_dump(exclude_unset=True)
+    ticket_db.sqlmodel_update(ticket_data)
+    session.add(ticket_db)
+    session.commit()
+    session.refresh(ticket_db)
+    return ticket_db
+
+
+@app.delete("/tickets/{ticket_id}")
+def delete_ticket(ticket_id: uuid.UUID, session: DbSession):
+    ticket_db = session.get(Ticket, ticket_id)
+    if not ticket_db:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    session.delete(ticket_db)
+    session.commit()
+    return {}

@@ -1,0 +1,5 @@
+﻿@import "tailwindcss";
+
+html {
+    scrollbar-gutter: auto !important;
+}
