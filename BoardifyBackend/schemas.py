@@ -12,8 +12,11 @@ class TicketCreate(SQLModel):
     due_at: datetime | None = None
 
 
-class TicketStageUpdate(SQLModel):
-    stage_nr: int
+class TicketUpdate(SQLModel):
+    stage_nr: int | None = None
+    title: str | None = None
+    description: str | None = None
+    due_at: str | None = None
 
 
 class StagePublic(StageBase):
@@ -32,3 +35,7 @@ class BoardOverview(BoardBase):
 
 class BoardCreate(BoardBase):
     stages: list[StagePublic]
+
+
+class BoardUpdate(SQLModel):
+    name: str

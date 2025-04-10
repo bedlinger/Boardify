@@ -55,6 +55,19 @@ def create_board(board: BoardCreate, session: DbSession):
     return db_board
 
 
+@app.patch("/boards/{board_id}", response_model=BoardPublic)
+def update_board(board_id: uuid.UUID, board: BoardUpdate, session: DbSession):
+    board_db = session.get(Board, board_id)
+    if not board_db:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    board_data = board.model_dump(exclude_unset=True)
+    board_db.sqlmodel_update(board_data)
+    session.add(board_db)
+    session.commit()
+    session.refresh(board_db)
+    return board_db
+
+
 @app.delete("/boards/{board_id}")
 def delete_board(board_id: uuid.UUID, session: DbSession):
     board = session.get(Board, board_id)
@@ -68,6 +81,8 @@ def delete_board(board_id: uuid.UUID, session: DbSession):
 @app.post("/tickets", response_model=TicketPublic)
 def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession):
     db_ticket = Ticket.model_validate(ticket)
+    db_board = session.get(Board, board_id)
+    db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_board.stages])
     db_ticket.board_id = board_id
     session.add(db_ticket)
     session.commit()
@@ -76,17 +91,18 @@ def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession)
 
 
 @app.patch("/tickets/{ticket_id}", response_model=TicketPublic)
-def update_ticket(ticket_id: uuid.UUID, ticket: TicketStageUpdate, session: DbSession):
-    ticket_db = session.get(Ticket, ticket_id)
-    if not ticket_db:
+def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession):
+    db_ticket = session.get(Ticket, ticket_id)
+    if not db_ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-    ticket_db.is_done = ticket.stage_nr == max([s.nr for s in ticket_db.board.stages])
+    if ticket.stage_nr:
+        db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_ticket.board.stages])
     ticket_data = ticket.model_dump(exclude_unset=True)
-    ticket_db.sqlmodel_update(ticket_data)
-    session.add(ticket_db)
+    db_ticket.sqlmodel_update(ticket_data)
+    session.add(db_ticket)
     session.commit()
-    session.refresh(ticket_db)
-    return ticket_db
+    session.refresh(db_ticket)
+    return db_ticket
 
 
 @app.delete("/tickets/{ticket_id}")
