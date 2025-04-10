@@ -35,9 +35,15 @@ namespace Boardify.Models
         public DateTime? DueAt { get; set; }
     }
 
-    public class TicketStageUpdate
+    public class TicketUpdate
     {
         [JsonPropertyName("stage_nr")]
-        required public int StageNr { get; set; }
+        public int? StageNr { get; set; }
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+        [JsonPropertyName("due_at")]
+        public DateTime? DueAt { get; set; }
     }
 }

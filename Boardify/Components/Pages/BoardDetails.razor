@@ -4,7 +4,24 @@
 @inject BackendService BackendService
 
 <div class="mb-3 flex items-center justify-between">
-    <h2 class="text-3xl font-bold">@board.Name</h2>
+    <div class="flex gap-2">
+        @if(isBoardNameEdited) {
+            <InputText @bind-Value="boardNameEdit" type="text" class="input !w-full" placeholder="Name" id="name" required />
+            <button class="btn btn-primary" @onclick="EditBoardName">
+                Ändern
+            </button>
+            <button class="btn" @onclick="CancelBoardNameEdit">
+                Abbrechen
+            </button>
+        } else {
+            <h2 class="text-3xl font-bold">@board.Name</h2>
+            <button class="btn btn-square btn-primary btn-ghost" @onclick="OpenBoardNameEdit">
+                <span class="material-icons">
+                    edit
+                </span>
+            </button>
+        }
+    </div>
     <a href="/" class="btn btn-square btn-ghost">
         <span class="material-icons">home</span>
     </a>
@@ -61,7 +78,18 @@
                 @openedTicket?.Description
             </div>
             <div class="modal-action !flex !justify-between !bg-white">
-                <button class="btn btn-error btn-soft" @onclick="DeleteOpenedTicket">Ticket löschen</button>
+                <div class="flex gap-2">
+                    <button class="btn btn-error btn-soft" @onclick="DeleteOpenedTicket">
+                        <span class="material-icons">
+                            delete
+                        </span>
+                    </button>
+                    <button class="btn btn-info btn-soft" @onclick="OpenEdit">
+                        <span class="material-icons">
+                            edit
+                        </span>
+                    </button>
+                </div>
                 <button class="btn" @onclick="CloseTicket">Schließen</button>
             </div>
         </div>
@@ -96,6 +124,34 @@
     </div>
 }
 
+@if(isEditModalOpened) {
+    <div class="modal modal-open">
+        <form class="modal-box" @onsubmit="EditTicket">
+            <h3 class="text-lg font-bold">Ticket bearbeiten</h3>
+            <div class="py-4">
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="title">Titel</label>
+                    <InputText @bind-Value="editTicket.Title" type="text" class="input !w-full" placeholder="Titel eingeben" id="title" required />
+                </fieldset>
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="description">Beschreibung</label>
+                    <InputTextArea @bind-Value="editTicket.Description" class="textarea !w-full" placeholder="Beschreibung eingeben" id="description" />
+                    <p class="fieldset-label">Optional</p>
+                </fieldset>
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="name">Fälligkeitsdatum</label>
+                    <InputDate @bind-Value="editTicket.DueAt" class="input !w-full" id="name" />
+                    <p class="fieldset-label">Optional</p>
+                </fieldset>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-primary" type="submit">Ändern</button>
+                <button class="btn" @onclick="@CloseEdit">Schließen</button>
+            </div>
+        </form>
+    </div>
+}
+
 @code {
     [Parameter]
     public string Id { get; set; } = "";
@@ -109,9 +165,10 @@
         };
 
     private Ticket? draggedTicket;
-
     private bool isDetailsModalOpened = false;
     private Ticket? openedTicket;
+    private bool isBoardNameEdited = false;
+    private string boardNameEdit = "";
 
     private bool isAddModalOpened = false;
     private TicketCreate addTicket = new TicketCreate()
@@ -120,17 +177,24 @@
             Description = "",
         };
 
+    private bool isEditModalOpened = false;
+    private TicketUpdate editTicket = new TicketUpdate()
+        {
+            Title = "",
+            Description = "",
+            DueAt = null,
+        };
+
     protected override async Task OnInitializedAsync()
     {
         board = await BackendService.GetBoard(Id);
     }
 
-    async void DropTicket(int stage) {
+    async Task DropTicket(int stage) {
         if (draggedTicket != null)
         {
             board.Tickets.Remove(draggedTicket);
-            board.Tickets.Add(await BackendService.UpdateTicketStage(draggedTicket.Id, new TicketStageUpdate() { StageNr = stage }));
-            StateHasChanged();
+            board.Tickets.Add(await BackendService.UpdateTicket(draggedTicket.Id, new TicketUpdate() { StageNr = stage }));
         }
     }
 
@@ -156,7 +220,24 @@
         isAddModalOpened = false;
     }
 
-    async void AddTicket() {
+    void OpenEdit()
+    {
+        if (openedTicket == null) return;
+        editTicket = new TicketUpdate()
+            {
+                Title = openedTicket.Title,
+                Description = openedTicket.Description,
+                DueAt = openedTicket.DueAt
+            };
+        isEditModalOpened = true;
+    }
+
+    void CloseEdit()
+    {
+        isEditModalOpened = false;
+    }
+
+    async Task AddTicket() {
         var newTicket = await BackendService.CreateTicket(Id, addTicket);
         board.Tickets.Add(newTicket);
         isAddModalOpened = false;
@@ -165,16 +246,42 @@
                 Title = "",
                 Description = "",
             };
-        StateHasChanged();
     }
 
-    async void DeleteOpenedTicket() {
+    async Task EditTicket() {
+        if (openedTicket == null) return;
+        var updatedTicket = await BackendService.UpdateTicket(openedTicket.Id, editTicket);
+        openedTicket = updatedTicket;
+        var index = board.Tickets.FindIndex(t => t.Id == openedTicket.Id);
+        if (index != -1)
+        {
+            board.Tickets[index] = updatedTicket;
+        }
+        isEditModalOpened = false;
+    }
+
+    async Task DeleteOpenedTicket() {
         if (openedTicket != null)
         {
             await BackendService.DeleteTicket(openedTicket.Id);
             board.Tickets.Remove(openedTicket);
         }
         isDetailsModalOpened = false;
-        StateHasChanged();
+    }
+
+    void OpenBoardNameEdit() {
+        boardNameEdit = board.Name;
+        isBoardNameEdited = true;
+    }
+
+    void CancelBoardNameEdit() {
+        isBoardNameEdited = false;
+    }
+
+    async Task EditBoardName() {
+        if (string.IsNullOrWhiteSpace(boardNameEdit)) return;
+        board.Name = boardNameEdit;
+        await BackendService.UpdateBoard(board.Id, new BoardUpdate() { Name = board.Name });
+        isBoardNameEdited = false;
     }
 }

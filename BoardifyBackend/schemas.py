@@ -16,7 +16,7 @@ class TicketUpdate(SQLModel):
     stage_nr: int | None = None
     title: str | None = None
     description: str | None = None
-    due_at: str | None = None
+    due_at: datetime | None = None
 
 
 class StagePublic(StageBase):

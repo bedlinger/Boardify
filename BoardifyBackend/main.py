@@ -97,7 +97,7 @@ def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession
         raise HTTPException(status_code=404, detail="Ticket not found")
     if ticket.stage_nr:
         db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_ticket.board.stages])
-    ticket_data = ticket.model_dump(exclude_unset=True)
+    ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True)
     db_ticket.sqlmodel_update(ticket_data)
     session.add(db_ticket)
     session.commit()

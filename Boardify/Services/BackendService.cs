@@ -44,6 +44,11 @@ namespace Boardify.Services
             return await FetchAsync<Board>("/boards", HttpMethod.Post, board);
         }
 
+        public async Task<Board> UpdateBoard(string id, BoardUpdate board)
+        {
+            return await FetchAsync<Board>($"/boards/{id}", HttpMethod.Patch, board);
+        }
+
         public async Task DeleteBoard(string id)
         {
             await FetchAsync<object>($"/boards/{id}", HttpMethod.Delete);
@@ -54,7 +59,7 @@ namespace Boardify.Services
             return await FetchAsync<Ticket>($"/tickets?board_id={boardId}", HttpMethod.Post, ticket);
         }
 
-        public async Task<Ticket> UpdateTicketStage(string ticketId, TicketStageUpdate ticketUpdate)
+        public async Task<Ticket> UpdateTicket(string ticketId, TicketUpdate ticketUpdate)
         {
             return await FetchAsync<Ticket>($"/tickets/{ticketId}", HttpMethod.Patch, ticketUpdate);
         }

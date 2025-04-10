@@ -22,6 +22,12 @@ namespace Boardify.Models
         required public List<Stage> Stages { get; set; }
     }
 
+    public class  BoardUpdate
+    {
+        [JsonPropertyName("name")]
+        required public string Name { get; set; }
+    }
+
     public class BoardOverview
     {
         [JsonPropertyName("id")]
