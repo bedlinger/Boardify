@@ -50,6 +50,10 @@ class Ticket(TicketBase, table=True):
     tag_links: list["TicketTagLink"] = Relationship(back_populates="ticket",
                                                     sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
+    @property
+    def tags(self) -> list[Tag]:
+        return [link.tag for link in self.tag_links]
+
 
 class StageBase(SQLModel):
     nr: int = Field(primary_key=True)

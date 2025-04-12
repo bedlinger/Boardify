@@ -23,7 +23,7 @@ class TicketCreate(SQLModel):
     title: str
     description: str
     due_at: datetime | None = None
-    tags: list[int] = []
+    tag_nrs: list[int] = []
 
 
 class TicketUpdate(SQLModel):
@@ -31,7 +31,7 @@ class TicketUpdate(SQLModel):
     title: str | None = None
     description: str | None = None
     due_at: datetime | None = None
-    tags: list[int] | None = None
+    tag_nrs: list[int] | None = None
 
 
 class StagePublic(StageBase):

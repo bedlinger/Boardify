@@ -81,8 +81,7 @@ def delete_board(board_id: uuid.UUID, session: DbSession):
 
 @app.post("/tickets", response_model=TicketPublic)
 def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession):
-    # Create ticket without tags
-    ticket_data = ticket.model_dump(exclude={"tags"})
+    ticket_data = ticket.model_dump(exclude={"tag_nrs"})
     db_ticket = Ticket(**ticket_data)
     db_board = session.get(Board, board_id)
     if not db_board:
@@ -93,7 +92,7 @@ def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession)
     session.add(db_ticket)
     session.flush()
 
-    for tag_nr in ticket.tags:
+    for tag_nr in ticket.tag_nrs:
         tag = session.exec(select(Tag).where(
             Tag.board_id == board_id,
             Tag.nr == tag_nr
@@ -120,13 +119,13 @@ def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession
     if ticket.stage_nr:
         db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_ticket.board.stages])
 
-    ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True, exclude={"tags"})
+    ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True, exclude={"tag_nrs"})
     db_ticket.sqlmodel_update(ticket_data)
 
-    if ticket.tags is not None:
+    if ticket.tag_nrs is not None:
         session.exec(delete(TicketTagLink).where(TicketTagLink.ticket_id == ticket_id))
 
-        for tag_nr in ticket.tags:
+        for tag_nr in ticket.tag_nrs:
             tag = session.exec(select(Tag).where(
                 Tag.board_id == db_ticket.board_id,
                 Tag.nr == tag_nr
