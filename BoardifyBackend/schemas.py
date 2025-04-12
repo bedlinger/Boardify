@@ -1,8 +1,21 @@
 from models import *
 
 
-class TicketPublic(TicketBase):
+class TagPublic(TagBase):
     pass
+
+
+class TagCreate(SQLModel):
+    nr: int
+    name: str
+
+
+class TicketTagInfo(SQLModel):
+    nr: int
+
+
+class TicketPublic(TicketBase):
+    tags: list[TagPublic] = []
 
 
 class TicketCreate(SQLModel):
@@ -10,6 +23,7 @@ class TicketCreate(SQLModel):
     title: str
     description: str
     due_at: datetime | None = None
+    tags: list[int] = []
 
 
 class TicketUpdate(SQLModel):
@@ -17,6 +31,7 @@ class TicketUpdate(SQLModel):
     title: str | None = None
     description: str | None = None
     due_at: datetime | None = None
+    tags: list[int] | None = None
 
 
 class StagePublic(StageBase):
@@ -35,6 +50,7 @@ class BoardOverview(BoardBase):
 
 class BoardCreate(BoardBase):
     stages: list[StagePublic]
+    tags: list[TagCreate] = []
 
 
 class BoardUpdate(SQLModel):
