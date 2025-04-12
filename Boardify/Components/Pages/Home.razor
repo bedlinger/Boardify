@@ -16,14 +16,16 @@
 </div>
 
 <div class="flex flex-col gap-3">
-    @foreach(var board in boards)
+    @foreach (var board in boards)
     {
         var id = board.Id;
         <div class="relative">
-            <a href="/board/@board.Id" class="flex items-center justify-between rounded-md p-4 shadow-md hover:shadow-lg">
+            <a href="/board/@board.Id"
+               class="flex items-center justify-between rounded-md p-4 shadow-md hover:shadow-lg">
                 <div class="flex flex-col">
                     <span class="text-xl font-bold">@board.Name</span>
-                    <span class="text-gray-400">@board.TicketsCount Tickets, davon @board.DoneTicketsCount erledigt</span>
+                    <span
+                        class="text-gray-400">@board.TicketsCount Tickets, davon @board.DoneTicketsCount erledigt</span>
                 </div>
             </a>
             <div class="absolute top-2 right-2">
@@ -45,7 +47,7 @@
 </div>
 
 @code {
-    private List<BoardOverview> boards = new List<BoardOverview>();
+    private List<BoardOverview> boards = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,4 +60,5 @@
         boards.RemoveAll(b => b.Id == id);
         StateHasChanged();
     }
+
 }

@@ -20,9 +20,9 @@
 
     <fieldset class="fieldset">
         <span class="fieldset-legend">Stages</span>
-        @for (int i = 0; i < _board.Stages.Count; i++)
+        @for (var i = 0; i < _board.Stages.Count; i++)
         {
-            int buffer = i;
+            var buffer = i;
             <div class="flex items-center gap-2">
                 <label for=@i class="ml-4 w-4">@(i + 1).</label>
                 <InputText @bind-Value="_board.Stages[buffer].Name" type="text" class="input" id="@i"/>
@@ -45,7 +45,8 @@
     <fieldset class="fieldset">
         <span class="fieldset-legend">Tags</span>
         <div class="flex items-center gap-3 mb-4">
-            <InputText @bind-Value="_tagName" type="text" class="input input-bordered flex-grow" placeholder="Z.B. Bug" id="tag"/>
+            <InputText @bind-Value="_tagName" type="text" class="input input-bordered flex-grow" placeholder="Z.B. Bug"
+                       id="tag"/>
             <button type="button" class="btn btn-primary btn-sm gap-1 min-w-[120px]" @onclick="() => AddTag(_tagName)">
                 <span class="material-icons text-sm">add</span>
                 Hinzufügen
@@ -58,7 +59,8 @@
                 {
                     <div class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center">
                         <span class="text-sm font-medium truncate max-w-[150px]">@tag.Name</span>
-                        <button type="button" class="btn btn-ghost btn-xs btn-circle p-0 h-5 w-5 min-h-0 flex items-center justify-center hover:bg-primary/20"
+                        <button type="button"
+                                class="btn btn-ghost btn-xs btn-circle p-0 h-5 w-5 min-h-0 flex items-center justify-center hover:bg-primary/20"
                                 @onclick="() => RemoveTag(tag.Id)">
                             <span class="material-icons text-xs">close</span>
                         </button>
@@ -84,16 +86,16 @@
         Name = "",
         Stages =
         [
-            new Stage() { Nr = 0, Name = "To-Do" },
-            new Stage() { Nr = 1, Name = "In Arbeit" },
-            new Stage() { Nr = 2, Name = "Erledigt" }
+            new Stage { Nr = 0, Name = "To-Do" },
+            new Stage { Nr = 1, Name = "In Arbeit" },
+            new Stage { Nr = 2, Name = "Erledigt" }
         ],
         Tags = []
     };
 
     private void AddStage()
     {
-        _board.Stages.Add(new Stage() { Nr = _board.Stages.Max(s => s.Nr) + 1, Name = "" });
+        _board.Stages.Add(new Stage { Nr = _board.Stages.Max(s => s.Nr) + 1, Name = "" });
     }
 
     private void RemoveStage(int index)
@@ -105,7 +107,7 @@
     {
         if (string.IsNullOrWhiteSpace(name))
             return;
-        
+
         _board.Tags.Add(new Tag
         {
             Id = !_board.Tags.Any() ? 1 : _board.Tags.Max(t => t.Id) + 1,
@@ -124,4 +126,5 @@
         var createdBoard = await BackendService.CreateBoard(_board);
         NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
     }
+
 }
