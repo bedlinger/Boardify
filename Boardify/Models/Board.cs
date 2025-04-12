@@ -50,7 +50,7 @@ public class Stage
 
 public class Tag
 {
-    [JsonPropertyName("id")] public required int Id { get; set; }
+    [JsonPropertyName("nr")] public required int Nr { get; set; }
 
     [JsonPropertyName("name")] public required string Name { get; set; }
 }

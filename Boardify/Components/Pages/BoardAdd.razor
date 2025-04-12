@@ -61,7 +61,7 @@
                         <span class="text-sm font-medium truncate max-w-[150px]">@tag.Name</span>
                         <button type="button"
                                 class="btn btn-ghost btn-xs btn-circle p-0 h-5 w-5 min-h-0 flex items-center justify-center hover:bg-primary/20"
-                                @onclick="() => RemoveTag(tag.Id)">
+                                @onclick="() => RemoveTag(tag.Nr)">
                             <span class="material-icons text-xs">close</span>
                         </button>
                     </div>
@@ -110,15 +110,15 @@
 
         _board.Tags.Add(new Tag
         {
-            Id = !_board.Tags.Any() ? 1 : _board.Tags.Max(t => t.Id) + 1,
+            Nr = !_board.Tags.Any() ? 1 : _board.Tags.Max(t => t.Nr) + 1,
             Name = name
         });
         _tagName = "";
     }
 
-    private void RemoveTag(int id)
+    private void RemoveTag(int nr)
     {
-        _board.Tags.RemoveAll(t => t.Id == id);
+        _board.Tags.RemoveAll(t => t.Nr == nr);
     }
 
     private async void Submit()
