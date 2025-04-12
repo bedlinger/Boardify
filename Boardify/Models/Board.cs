@@ -11,6 +11,8 @@ public class Board
     [JsonPropertyName("tickets")] public required List<Ticket> Tickets { get; set; }
 
     [JsonPropertyName("stages")] public required List<Stage> Stages { get; set; }
+
+    [JsonPropertyName("tags")] public required List<Tag> Tags { get; set; }
 }
 
 public class BoardCreate

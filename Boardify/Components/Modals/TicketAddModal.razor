@@ -1,0 +1,129 @@
+@inject BackendService BackendService
+
+@if (isOpen)
+{
+    <div class="modal modal-open">
+        <form class="modal-box" @onsubmit="AddTicket">
+            <h3 class="text-lg font-bold">Ticket erstellen</h3>
+            <div class="py-4">
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="title">Titel</label>
+                    <InputText @bind-Value="ticketCreate.Title" type="text" class="input !w-full"
+                               placeholder="Titel eingeben" id="title" required/>
+                </fieldset>
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="description">Beschreibung</label>
+                    <InputTextArea @bind-Value="ticketCreate.Description" class="textarea !w-full"
+                                   placeholder="Beschreibung eingeben" id="description"/>
+                    <p class="fieldset-label">Optional</p>
+                </fieldset>
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend" for="dueDate">Fälligkeitsdatum</label>
+                    <InputDate @bind-Value="ticketCreate.DueAt" class="input !w-full" id="dueDate"/>
+                    <p class="fieldset-label">Optional</p>
+                </fieldset>
+                <fieldset class="fieldset">
+                    <label class="fieldset-legend">Tags</label>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        @foreach (var tag in Board.Tags)
+                        {
+                            @if (IsTagSelected(tag.Nr))
+                            {
+                                <div @onclick="() => ToggleTag(tag, false)" 
+                                     class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
+                                    <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                    <span class="material-icons text-xs pointer-events-none">close</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div @onclick="() => ToggleTag(tag, true)" 
+                                     class="badge badge-lg badge-primary gap-2 py-3 px-4 flex items-center cursor-pointer">
+                                    <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                    <span class="material-icons text-xs pointer-events-none">add</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                    @if (!Board.Tags.Any())
+                    {
+                        <div class="text-sm text-gray-500 italic">Keine Tags verfügbar</div>
+                    }
+                    <p class="fieldset-label">Optional</p>
+                </fieldset>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-primary" type="submit">Erstellen</button>
+                <button class="btn" @onclick="Close">Schließen</button>
+            </div>
+        </form>
+    </div>
+}
+
+@code {
+    [Parameter] public Board Board { get; set; } = null!;
+    [Parameter] public EventCallback<Ticket> OnTicketAdded { get; set; }
+
+    private bool isOpen;
+
+    private TicketCreate ticketCreate = new()
+    {
+        Title = "",
+        Description = "",
+        TagNrs = new List<int>()
+    };
+
+    public void Open(int stageNr)
+    {
+        ticketCreate = new TicketCreate
+        {
+            StageNr = stageNr,
+            Title = "",
+            Description = "",
+            TagNrs = new List<int>()
+        };
+        isOpen = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        isOpen = false;
+        StateHasChanged();
+    }
+
+    private bool IsTagSelected(int tagNr)
+    {
+        return ticketCreate.TagNrs.Contains(tagNr);
+    }
+
+    private void ToggleTag(Tag tag, bool isSelected)
+    {
+        if (isSelected)
+        {
+            if (!ticketCreate.TagNrs.Contains(tag.Nr))
+            {
+                ticketCreate.TagNrs.Add(tag.Nr);
+            }
+        }
+        else
+        {
+            ticketCreate.TagNrs.Remove(tag.Nr);
+        }
+    }
+
+    private async Task AddTicket()
+    {
+        try
+        {
+            var newTicket = await BackendService.CreateTicket(Board.Id, ticketCreate);
+            await OnTicketAdded.InvokeAsync(newTicket);
+            Close();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating ticket: {ex.Message}");
+        }
+    }
+
+}

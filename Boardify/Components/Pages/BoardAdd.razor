@@ -57,13 +57,10 @@
             {
                 @foreach (var tag in _board.Tags)
                 {
-                    <div class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center">
-                        <span class="text-sm font-medium truncate max-w-[150px]">@tag.Name</span>
-                        <button type="button"
-                                class="btn btn-ghost btn-xs btn-circle p-0 h-5 w-5 min-h-0 flex items-center justify-center hover:bg-primary/20"
-                                @onclick="() => RemoveTag(tag.Nr)">
-                            <span class="material-icons text-xs">close</span>
-                        </button>
+                    <div @onclick="() => RemoveTag(tag.Nr)" 
+                         class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
+                        <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                        <span class="material-icons text-xs pointer-events-none">close</span>
                     </div>
                 }
             }

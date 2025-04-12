@@ -1,4 +1,5 @@
 ﻿@page "/board/{id}"
+@using Boardify.Components.Modals
 @layout FullLayout
 @rendermode InteractiveServer
 @inject BackendService BackendService
@@ -9,20 +10,14 @@
         {
             <InputText @bind-Value="boardNameEdit" type="text" class="input !w-full" placeholder="Name" id="name"
                        required/>
-            <button class="btn btn-primary" @onclick="EditBoardName">
-                Ändern
-            </button>
-            <button class="btn" @onclick="CancelBoardNameEdit">
-                Abbrechen
-            </button>
+            <button class="btn btn-primary" @onclick="EditBoardName">Ändern</button>
+            <button class="btn" @onclick="CancelBoardNameEdit">Abbrechen</button>
         }
         else
         {
             <h2 class="text-3xl font-bold">@board.Name</h2>
             <button class="btn btn-square btn-primary btn-ghost" @onclick="OpenBoardNameEdit">
-                <span class="material-icons">
-                    edit
-                </span>
+                <span class="material-icons">edit</span>
             </button>
         }
     </div>
@@ -34,18 +29,21 @@
 <div class="flex flex-col gap-3 md:flex-row">
     @foreach (var (stage, i) in board.Stages.Select((v, i) => (v, i)))
     {
-        <div class="flex min-h-96 flex-1 flex-col gap-2 rounded-lg bg-gray-50 p-2" @ondrop="() => DropTicket(i)"
+        <div class="flex min-h-96 flex-1 flex-col gap-2 rounded-lg bg-gray-50 p-2"
+             @ondrop="() => DropTicket(i)"
              ondragover="event.preventDefault();">
             <div class="mb-2 flex justify-between p-2">
                 <h3 class="font-bold text-gray-600 uppercase">@stage.Name</h3>
-                <div class="badge badge-soft badge-primary">@board.Tickets.Where(t => t.StageNr == i).Count()</div>
+                <div class="badge badge-soft badge-primary">@GetTicketsInStage(i).Count()</div>
             </div>
-            @foreach (var ticket in board.Tickets.Where(t => t.StageNr == i))
+            @foreach (var ticket in GetTicketsInStage(i))
             {
-                var id = ticket.Id;
-                <div
-                    class="flex cursor-move flex-col gap-2 rounded-md border-l-4 bg-white p-2 shadow-md @(ticket.StageNr == 0 ? "border-l-blue-600" : "border-l-blue-400") @(ticket.IsDone ? "opacity-60" : "")"
-                    draggable="true" @ondragstart="() => StartTicketDrag(id)" @onclick="() => OpenTicket(id)">
+                <div class="flex cursor-move flex-col gap-2 rounded-md border-l-4 bg-white p-2 shadow-md 
+                            @(ticket.StageNr == 0 ? "border-l-blue-600" : "border-l-blue-400") 
+                            @(ticket.IsDone ? "opacity-60" : "")"
+                     draggable="true"
+                     @ondragstart="() => StartTicketDrag(ticket.Id)"
+                     @onclick="() => OpenTicket(ticket.Id)">
                     <div class="text-lg @(ticket.IsDone ? "line-through" : "")">@ticket.Title</div>
                     <div class="flex justify-end text-gray-400">
                         @if (ticket.DueAt == null)
@@ -60,10 +58,8 @@
                 </div>
             }
             <div class="flex justify-center text-gray-400">
-                <button href="/add" class="btn btn-ghost btn-sm flex" @onclick="() => OpenAdd(i)">
-                    <span class="material-icons">
-                        add
-                    </span>
+                <button class="btn btn-ghost btn-sm flex" @onclick="() => OpenAdd(i)">
+                    <span class="material-icons">add</span>
                     Neues Ticket
                 </button>
             </div>
@@ -71,105 +67,18 @@
     }
 </div>
 
-@if (isDetailsModalOpened)
-{
-    <div class="modal modal-open">
-        <div class="modal-box !w-full">
-            <h3 class="flex items-center gap-2 text-lg">
-                <span class="font-bold">@openedTicket?.Title</span>
-                <span
-                    class="badge badge-sm font-normal">@board.Stages.Find(s => s.Nr == openedTicket?.StageNr)?.Name</span>
-            </h3>
-            <div class="text-gray-400">
-                Erstellt am @openedTicket?.CreatedDateFormatted
-                @if (openedTicket?.DueAt != null)
-                {
-                    <span>, fällig am @openedTicket?.DueDateFormatted</span>
-                }
-            </div>
-            <div class="max-h-96 overflow-auto py-4">
-                @openedTicket?.Description
-            </div>
-            <div class="modal-action !flex !justify-between !bg-white">
-                <div class="flex gap-2">
-                    <button class="btn btn-error btn-soft" @onclick="DeleteOpenedTicket">
-                        <span class="material-icons">
-                            delete
-                        </span>
-                    </button>
-                    <button class="btn btn-info btn-soft" @onclick="OpenEdit">
-                        <span class="material-icons">
-                            edit
-                        </span>
-                    </button>
-                </div>
-                <button class="btn" @onclick="CloseTicket">Schließen</button>
-            </div>
-        </div>
-    </div>
-}
+<TicketDetailsModal @ref="detailsModal"
+                    Board="board"
+                    OnEdit="OpenEdit"
+                    OnDelete="DeleteOpenedTicket"/>
 
-@if (isAddModalOpened)
-{
-    <div class="modal modal-open">
-        <form class="modal-box" @onsubmit="AddTicket">
-            <h3 class="text-lg font-bold">Ticket erstellen</h3>
-            <div class="py-4">
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="title">Titel</label>
-                    <InputText @bind-Value="addTicket.Title" type="text" class="input !w-full"
-                               placeholder="Titel eingeben" id="title" required/>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="description">Beschreibung</label>
-                    <InputTextArea @bind-Value="addTicket.Description" class="textarea !w-full"
-                                   placeholder="Beschreibung eingeben" id="description"/>
-                    <p class="fieldset-label">Optional</p>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="name">Fälligkeitsdatum</label>
-                    <InputDate @bind-Value="addTicket.DueAt" class="input !w-full" id="name"/>
-                    <p class="fieldset-label">Optional</p>
-                </fieldset>
-            </div>
-            <div class="modal-action">
-                <button class="btn btn-primary" type="submit">Erstellen</button>
-                <button class="btn" @onclick="CloseAdd">Schließen</button>
-            </div>
-        </form>
-    </div>
-}
+<TicketAddModal @ref="addModal"
+                Board="board"
+                OnTicketAdded="HandleTicketAdded"/>
 
-@if (isEditModalOpened)
-{
-    <div class="modal modal-open">
-        <form class="modal-box" @onsubmit="EditTicket">
-            <h3 class="text-lg font-bold">Ticket bearbeiten</h3>
-            <div class="py-4">
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="title">Titel</label>
-                    <InputText @bind-Value="editTicket.Title" type="text" class="input !w-full"
-                               placeholder="Titel eingeben" id="title" required/>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="description">Beschreibung</label>
-                    <InputTextArea @bind-Value="editTicket.Description" class="textarea !w-full"
-                                   placeholder="Beschreibung eingeben" id="description"/>
-                    <p class="fieldset-label">Optional</p>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend" for="name">Fälligkeitsdatum</label>
-                    <InputDate @bind-Value="editTicket.DueAt" class="input !w-full" id="name"/>
-                    <p class="fieldset-label">Optional</p>
-                </fieldset>
-            </div>
-            <div class="modal-action">
-                <button class="btn btn-primary" type="submit">Ändern</button>
-                <button class="btn" @onclick="@CloseEdit">Schließen</button>
-            </div>
-        </form>
-    </div>
-}
+<TicketEditModal @ref="editModal"
+                 Board="board"
+                 OnTicketUpdated="HandleTicketUpdated"/>
 
 @code {
     [Parameter] public string Id { get; set; } = "";
@@ -179,144 +88,116 @@
         Id = "",
         Name = "",
         Stages = new List<Stage>(),
-        Tickets = new List<Ticket>()
+        Tickets = new List<Ticket>(),
+        Tags = new List<Tag>()
     };
 
     private Ticket? draggedTicket;
-    private bool isDetailsModalOpened;
-    private Ticket? openedTicket;
     private bool isBoardNameEdited;
     private string boardNameEdit = "";
 
-    private bool isAddModalOpened;
-
-    private TicketCreate addTicket = new()
-    {
-        Title = "",
-        Description = ""
-    };
-
-    private bool isEditModalOpened;
-
-    private TicketUpdate editTicket = new()
-    {
-        Title = "",
-        Description = "",
-        DueAt = null
-    };
+    private TicketDetailsModal detailsModal = null!;
+    private TicketAddModal addModal = null!;
+    private TicketEditModal editModal = null!;
 
     protected override async Task OnInitializedAsync()
     {
         board = await BackendService.GetBoard(Id);
     }
 
-    async Task DropTicket(int stage)
+    private IEnumerable<Ticket> GetTicketsInStage(int stageNr)
+    {
+        return board.Tickets.Where(t => t.StageNr == stageNr);
+    }
+
+    private async Task DropTicket(int stage)
     {
         if (draggedTicket != null)
         {
-            board.Tickets.Remove(draggedTicket);
-            board.Tickets.Add(await BackendService.UpdateTicket(draggedTicket.Id, new TicketUpdate { StageNr = stage }));
+            var updatedTicket = await BackendService.UpdateTicket(
+                draggedTicket.Id,
+                new TicketUpdate { StageNr = stage }
+            );
+
+            UpdateTicketInCollection(updatedTicket);
         }
     }
 
-    void StartTicketDrag(string id)
+    private void StartTicketDrag(string id)
     {
         draggedTicket = board.Tickets.Find(t => t.Id == id);
     }
 
-    void OpenTicket(string id)
+    private void OpenTicket(string id)
     {
-        openedTicket = board.Tickets.Find(t => t.Id == id);
-        isDetailsModalOpened = true;
-    }
-
-    void CloseTicket()
-    {
-        isDetailsModalOpened = false;
-    }
-
-    void OpenAdd(int stage)
-    {
-        addTicket.StageNr = stage;
-        isAddModalOpened = true;
-    }
-
-    void CloseAdd()
-    {
-        isAddModalOpened = false;
-    }
-
-    void OpenEdit()
-    {
-        if (openedTicket == null) return;
-        editTicket = new TicketUpdate
+        var ticket = board.Tickets.Find(t => t.Id == id);
+        if (ticket != null)
         {
-            Title = openedTicket.Title,
-            Description = openedTicket.Description,
-            DueAt = openedTicket.DueAt
-        };
-        isEditModalOpened = true;
-    }
-
-    void CloseEdit()
-    {
-        isEditModalOpened = false;
-    }
-
-    async Task AddTicket()
-    {
-        var newTicket = await BackendService.CreateTicket(Id, addTicket);
-        board.Tickets.Add(newTicket);
-        isAddModalOpened = false;
-        addTicket = new TicketCreate
-        {
-            Title = "",
-            Description = ""
-        };
-    }
-
-    async Task EditTicket()
-    {
-        if (openedTicket == null) return;
-        var updatedTicket = await BackendService.UpdateTicket(openedTicket.Id, editTicket);
-        openedTicket = updatedTicket;
-        var index = board.Tickets.FindIndex(t => t.Id == openedTicket.Id);
-        if (index != -1)
-        {
-            board.Tickets[index] = updatedTicket;
+            detailsModal.Open(ticket);
         }
-
-        isEditModalOpened = false;
     }
 
-    async Task DeleteOpenedTicket()
+    private void OpenAdd(int stage)
     {
-        if (openedTicket != null)
-        {
-            await BackendService.DeleteTicket(openedTicket.Id);
-            board.Tickets.Remove(openedTicket);
-        }
-
-        isDetailsModalOpened = false;
+        addModal.Open(stage);
     }
 
-    void OpenBoardNameEdit()
+    private void OpenEdit(Ticket ticket)
+    {
+        editModal.Open(ticket);
+    }
+
+    private async Task DeleteOpenedTicket(Ticket ticket)
+    {
+        await BackendService.DeleteTicket(ticket.Id);
+        board.Tickets.RemoveAll(t => t.Id == ticket.Id);
+    }
+
+    private void OpenBoardNameEdit()
     {
         boardNameEdit = board.Name;
         isBoardNameEdited = true;
     }
 
-    void CancelBoardNameEdit()
+    private void CancelBoardNameEdit()
     {
         isBoardNameEdited = false;
     }
 
-    async Task EditBoardName()
+    private async Task EditBoardName()
     {
         if (string.IsNullOrWhiteSpace(boardNameEdit)) return;
+
         board.Name = boardNameEdit;
-        await BackendService.UpdateBoard(board.Id, new BoardUpdate { Name = board.Name });
+        await BackendService.UpdateBoard(
+            board.Id,
+            new BoardUpdate { Name = board.Name }
+        );
+
         isBoardNameEdited = false;
+    }
+
+    private void HandleTicketAdded(Ticket newTicket)
+    {
+        board.Tickets.Add(newTicket);
+    }
+
+    private void HandleTicketUpdated(Ticket updatedTicket)
+    {
+        UpdateTicketInCollection(updatedTicket);
+    }
+
+    private void UpdateTicketInCollection(Ticket ticket)
+    {
+        var index = board.Tickets.FindIndex(t => t.Id == ticket.Id);
+        if (index != -1)
+        {
+            board.Tickets[index] = ticket;
+        }
+        else
+        {
+            board.Tickets.Add(ticket);
+        }
     }
 
 }
