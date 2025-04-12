@@ -41,6 +41,7 @@ class StagePublic(StageBase):
 class BoardPublic(BoardBase):
     tickets: list[TicketPublic] = []
     stages: list[StagePublic]
+    tags: list[TagPublic] = []
 
 
 class BoardOverview(BoardBase):
