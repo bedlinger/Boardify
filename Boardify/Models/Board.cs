@@ -12,6 +12,8 @@ namespace Boardify.Models
         required public List<Ticket> Tickets { get; set; }
         [JsonPropertyName("stages")]
         required public List<Stage> Stages { get; set; }
+        [JsonPropertyName("tags")]
+        required public List<Tag> Tags { get; set; }
     }
 
     public class BoardCreate
@@ -20,6 +22,8 @@ namespace Boardify.Models
         required public string Name { get; set; }
         [JsonPropertyName("stages")]
         required public List<Stage> Stages { get; set; }
+        [JsonPropertyName("tags")]
+        required public List<Tag> Tags { get; set; }
     }
 
     public class  BoardUpdate
@@ -44,6 +48,14 @@ namespace Boardify.Models
     {
         [JsonPropertyName("nr")]
         required public int Nr { get; set; }
+        [JsonPropertyName("name")]
+        required public string Name { get; set; }
+    }
+
+    public class Tag
+    {
+        [JsonPropertyName("id")]
+        required public int Id { get; set; }
         [JsonPropertyName("name")]
         required public string Name { get; set; }
     }
