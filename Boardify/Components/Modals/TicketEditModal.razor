@@ -1,6 +1,6 @@
 @inject BackendService BackendService
 
-@if (isOpen && currentTicket != null)
+@if (_isOpen && _currentTicket != null)
 {
     <div class="modal modal-open">
         <form class="modal-box" @onsubmit="EditTicket">
@@ -8,18 +8,18 @@
             <div class="py-4">
                 <fieldset class="fieldset">
                     <label class="fieldset-legend" for="title">Titel</label>
-                    <InputText @bind-Value="ticketUpdate.Title" type="text" class="input !w-full"
+                    <InputText @bind-Value="_ticketUpdate.Title" type="text" class="input !w-full"
                                placeholder="Titel eingeben" id="title" required/>
                 </fieldset>
                 <fieldset class="fieldset">
                     <label class="fieldset-legend" for="description">Beschreibung</label>
-                    <InputTextArea @bind-Value="ticketUpdate.Description" class="textarea !w-full"
+                    <InputTextArea @bind-Value="_ticketUpdate.Description" class="textarea !w-full"
                                    placeholder="Beschreibung eingeben" id="description"/>
                     <p class="fieldset-label">Optional</p>
                 </fieldset>
                 <fieldset class="fieldset">
                     <label class="fieldset-legend" for="dueDate">Fälligkeitsdatum</label>
-                    <InputDate @bind-Value="ticketUpdate.DueAt" class="input !w-full" id="dueDate"/>
+                    <InputDate @bind-Value="_ticketUpdate.DueAt" class="input !w-full" id="dueDate"/>
                     <p class="fieldset-label">Optional</p>
                 </fieldset>
                 <fieldset class="fieldset">
@@ -29,17 +29,19 @@
                         {
                             @if (IsTagSelected(tag.Nr))
                             {
-                                <div @onclick="() => ToggleTag(tag, false)" 
+                                <div @onclick="() => ToggleTag(tag, false)"
                                      class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
-                                    <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                    <span
+                                        class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
                                     <span class="material-icons text-xs pointer-events-none">close</span>
                                 </div>
                             }
                             else
                             {
-                                <div @onclick="() => ToggleTag(tag, true)" 
+                                <div @onclick="() => ToggleTag(tag, true)"
                                      class="badge badge-lg badge-primary gap-2 py-3 px-4 flex items-center cursor-pointer">
-                                    <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                    <span
+                                        class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
                                     <span class="material-icons text-xs pointer-events-none">add</span>
                                 </div>
                             }
@@ -64,56 +66,56 @@
     [Parameter] public Board Board { get; set; } = null!;
     [Parameter] public EventCallback<Ticket> OnTicketUpdated { get; set; }
 
-    private bool isOpen;
-    private Ticket? currentTicket;
-    private TicketUpdate ticketUpdate = new();
+    private bool _isOpen;
+    private Ticket? _currentTicket;
+    private TicketUpdate _ticketUpdate = new();
 
     public void Open(Ticket ticket)
     {
-        currentTicket = ticket;
-        ticketUpdate = new TicketUpdate
+        _currentTicket = ticket;
+        _ticketUpdate = new TicketUpdate
         {
             Title = ticket.Title,
             Description = ticket.Description,
             DueAt = ticket.DueAt
         };
-        isOpen = true;
+        _isOpen = true;
         StateHasChanged();
     }
 
     public void Close()
     {
-        isOpen = false;
+        _isOpen = false;
         StateHasChanged();
     }
-    
+
     private bool IsTagSelected(int tagNr)
     {
-        return ticketUpdate.TagNrs.Contains(tagNr);
+        return _ticketUpdate.TagNrs.Contains(tagNr);
     }
 
     private void ToggleTag(Tag tag, bool isSelected)
     {
         if (isSelected)
         {
-            if (!ticketUpdate.TagNrs.Contains(tag.Nr))
+            if (!_ticketUpdate.TagNrs.Contains(tag.Nr))
             {
-                ticketUpdate.TagNrs.Add(tag.Nr);
+                _ticketUpdate.TagNrs.Add(tag.Nr);
             }
         }
         else
         {
-            ticketUpdate.TagNrs.Remove(tag.Nr);
+            _ticketUpdate.TagNrs.Remove(tag.Nr);
         }
     }
 
     private async Task EditTicket()
     {
-        if (currentTicket == null) return;
+        if (_currentTicket == null) return;
 
         try
         {
-            var updatedTicket = await BackendService.UpdateTicket(currentTicket.Id, ticketUpdate);
+            var updatedTicket = await BackendService.UpdateTicket(_currentTicket.Id, _ticketUpdate);
             await OnTicketUpdated.InvokeAsync(updatedTicket);
             Close();
         }

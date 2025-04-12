@@ -17,7 +17,7 @@ public class Ticket
     [JsonPropertyName("due_at")] public DateTime? DueAt { get; set; }
 
     [JsonPropertyName("is_done")] public bool IsDone { get; set; }
-    
+
     [JsonPropertyName("tags")] public List<Tag> Tags { get; set; } = new();
 
     public string CreatedDateFormatted => CreatedAt.ToString("dd.MM.yyyy");
@@ -46,6 +46,6 @@ public class TicketUpdate
     [JsonPropertyName("description")] public string? Description { get; set; }
 
     [JsonPropertyName("due_at")] public DateTime? DueAt { get; set; }
-    
+
     [JsonPropertyName("tag_nrs")] public List<int> TagNrs { get; set; } = new();
 }

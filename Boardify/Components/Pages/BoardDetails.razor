@@ -6,16 +6,16 @@
 
 <div class="mb-3 flex items-center justify-between">
     <div class="flex gap-2">
-        @if (isBoardNameEdited)
+        @if (_isBoardNameEdited)
         {
-            <InputText @bind-Value="boardNameEdit" type="text" class="input !w-full" placeholder="Name" id="name"
+            <InputText @bind-Value="_boardNameEdit" type="text" class="input !w-full" placeholder="Name" id="name"
                        required/>
             <button class="btn btn-primary" @onclick="EditBoardName">Ändern</button>
             <button class="btn" @onclick="CancelBoardNameEdit">Abbrechen</button>
         }
         else
         {
-            <h2 class="text-3xl font-bold">@board.Name</h2>
+            <h2 class="text-3xl font-bold">@_board.Name</h2>
             <button class="btn btn-square btn-primary btn-ghost" @onclick="OpenBoardNameEdit">
                 <span class="material-icons">edit</span>
             </button>
@@ -27,7 +27,7 @@
 </div>
 
 <div class="flex flex-col gap-3 md:flex-row">
-    @foreach (var (stage, i) in board.Stages.Select((v, i) => (v, i)))
+    @foreach (var (stage, i) in _board.Stages.Select((v, i) => (v, i)))
     {
         <div class="flex min-h-96 flex-1 flex-col gap-2 rounded-lg bg-gray-50 p-2"
              @ondrop="() => DropTicket(i)"
@@ -67,23 +67,23 @@
     }
 </div>
 
-<TicketDetailsModal @ref="detailsModal"
-                    Board="board"
+<TicketDetailsModal @ref="_detailsModal"
+                    Board="_board"
                     OnEdit="OpenEdit"
                     OnDelete="DeleteOpenedTicket"/>
 
-<TicketAddModal @ref="addModal"
-                Board="board"
+<TicketAddModal @ref="_addModal"
+                Board="_board"
                 OnTicketAdded="HandleTicketAdded"/>
 
-<TicketEditModal @ref="editModal"
-                 Board="board"
+<TicketEditModal @ref="_editModal"
+                 Board="_board"
                  OnTicketUpdated="HandleTicketUpdated"/>
 
 @code {
     [Parameter] public string Id { get; set; } = "";
 
-    private Board board = new()
+    private Board _board = new()
     {
         Id = "",
         Name = "",
@@ -92,30 +92,30 @@
         Tags = new List<Tag>()
     };
 
-    private Ticket? draggedTicket;
-    private bool isBoardNameEdited;
-    private string boardNameEdit = "";
+    private Ticket? _draggedTicket;
+    private bool _isBoardNameEdited;
+    private string _boardNameEdit = "";
 
-    private TicketDetailsModal detailsModal = null!;
-    private TicketAddModal addModal = null!;
-    private TicketEditModal editModal = null!;
+    private TicketDetailsModal _detailsModal = null!;
+    private TicketAddModal _addModal = null!;
+    private TicketEditModal _editModal = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        board = await BackendService.GetBoard(Id);
+        _board = await BackendService.GetBoard(Id);
     }
 
     private IEnumerable<Ticket> GetTicketsInStage(int stageNr)
     {
-        return board.Tickets.Where(t => t.StageNr == stageNr);
+        return _board.Tickets.Where(t => t.StageNr == stageNr);
     }
 
     private async Task DropTicket(int stage)
     {
-        if (draggedTicket != null)
+        if (_draggedTicket != null)
         {
             var updatedTicket = await BackendService.UpdateTicket(
-                draggedTicket.Id,
+                _draggedTicket.Id,
                 new TicketUpdate { StageNr = stage }
             );
 
@@ -125,61 +125,61 @@
 
     private void StartTicketDrag(string id)
     {
-        draggedTicket = board.Tickets.Find(t => t.Id == id);
+        _draggedTicket = _board.Tickets.Find(t => t.Id == id);
     }
 
     private void OpenTicket(string id)
     {
-        var ticket = board.Tickets.Find(t => t.Id == id);
+        var ticket = _board.Tickets.Find(t => t.Id == id);
         if (ticket != null)
         {
-            detailsModal.Open(ticket);
+            _detailsModal.Open(ticket);
         }
     }
 
     private void OpenAdd(int stage)
     {
-        addModal.Open(stage);
+        _addModal.Open(stage);
     }
 
     private void OpenEdit(Ticket ticket)
     {
-        editModal.Open(ticket);
+        _editModal.Open(ticket);
     }
 
     private async Task DeleteOpenedTicket(Ticket ticket)
     {
         await BackendService.DeleteTicket(ticket.Id);
-        board.Tickets.RemoveAll(t => t.Id == ticket.Id);
+        _board.Tickets.RemoveAll(t => t.Id == ticket.Id);
     }
 
     private void OpenBoardNameEdit()
     {
-        boardNameEdit = board.Name;
-        isBoardNameEdited = true;
+        _boardNameEdit = _board.Name;
+        _isBoardNameEdited = true;
     }
 
     private void CancelBoardNameEdit()
     {
-        isBoardNameEdited = false;
+        _isBoardNameEdited = false;
     }
 
     private async Task EditBoardName()
     {
-        if (string.IsNullOrWhiteSpace(boardNameEdit)) return;
+        if (string.IsNullOrWhiteSpace(_boardNameEdit)) return;
 
-        board.Name = boardNameEdit;
+        _board.Name = _boardNameEdit;
         await BackendService.UpdateBoard(
-            board.Id,
-            new BoardUpdate { Name = board.Name }
+            _board.Id,
+            new BoardUpdate { Name = _board.Name }
         );
 
-        isBoardNameEdited = false;
+        _isBoardNameEdited = false;
     }
 
     private void HandleTicketAdded(Ticket newTicket)
     {
-        board.Tickets.Add(newTicket);
+        _board.Tickets.Add(newTicket);
     }
 
     private void HandleTicketUpdated(Ticket updatedTicket)
@@ -189,14 +189,14 @@
 
     private void UpdateTicketInCollection(Ticket ticket)
     {
-        var index = board.Tickets.FindIndex(t => t.Id == ticket.Id);
+        var index = _board.Tickets.FindIndex(t => t.Id == ticket.Id);
         if (index != -1)
         {
-            board.Tickets[index] = ticket;
+            _board.Tickets[index] = ticket;
         }
         else
         {
-            board.Tickets.Add(ticket);
+            _board.Tickets.Add(ticket);
         }
     }
 

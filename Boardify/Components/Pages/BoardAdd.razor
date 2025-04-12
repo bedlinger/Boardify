@@ -57,7 +57,7 @@
             {
                 @foreach (var tag in _board.Tags)
                 {
-                    <div @onclick="() => RemoveTag(tag.Nr)" 
+                    <div @onclick="() => RemoveTag(tag.Nr)"
                          class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
                         <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
                         <span class="material-icons text-xs pointer-events-none">close</span>
@@ -118,10 +118,21 @@
         _board.Tags.RemoveAll(t => t.Nr == nr);
     }
 
-    private async void Submit()
+    private async Task Submit()
     {
-        var createdBoard = await BackendService.CreateBoard(_board);
-        NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
+        try
+        {
+            var createdBoard = await BackendService.CreateBoard(_board);
+            NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
+        }
+        catch (HttpRequestException ex)
+        {
+            await Console.Error.WriteLineAsync($"Network error creating board: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error creating board: {ex.Message}");
+        }
     }
 
 }

@@ -1,6 +1,5 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@inject NavigationManager Navigation
 @inject BackendService BackendService
 
 <PageTitle>Boardify</PageTitle>
@@ -16,7 +15,7 @@
 </div>
 
 <div class="flex flex-col gap-3">
-    @foreach (var board in boards)
+    @foreach (var board in _boards)
     {
         var id = board.Id;
         <div class="relative">
@@ -47,18 +46,31 @@
 </div>
 
 @code {
-    private List<BoardOverview> boards = new();
+    private List<BoardOverview> _boards = new();
 
     protected override async Task OnInitializedAsync()
     {
-        boards = await BackendService.GetBoardsOverview();
+        _boards = await BackendService.GetBoardsOverview();
     }
+    private string? _errorMessage;
 
-    async void Delete(string id)
+    async Task Delete(string id)
     {
-        await BackendService.DeleteBoard(id);
-        boards.RemoveAll(b => b.Id == id);
-        StateHasChanged();
+        try
+        {
+            await BackendService.DeleteBoard(id);
+            _boards.RemoveAll(b => b.Id == id);
+            _errorMessage = null;
+        }
+        catch (Exception e)
+        {
+            _errorMessage = $"Failed to delete board: {e.Message}";
+            await Console.Error.WriteLineAsync($"Error deleting board {id}: {e}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
 }
