@@ -1,7 +1,7 @@
+import uuid
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field, Relationship
-import uuid
 
 
 class TicketTagLink(SQLModel, table=True):
