@@ -10,7 +10,12 @@ class TicketTagLink(SQLModel, table=True):
     tag_nr: int = Field(foreign_key="tag.nr", primary_key=True)
 
     ticket: "Ticket" = Relationship(back_populates="tag_links")
-    tag: "Tag" = Relationship(back_populates="ticket_links")
+    tag: "Tag" = Relationship(
+        back_populates="ticket_links",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"
+        }
+    )
 
 
 class TagBase(SQLModel):
@@ -21,7 +26,12 @@ class TagBase(SQLModel):
 class Tag(TagBase, table=True):
     board_id: uuid.UUID = Field(primary_key=True, foreign_key="board.id")
     board: "Board" = Relationship(back_populates="tags")
-    ticket_links: list["TicketTagLink"] = Relationship(back_populates="tag")
+    ticket_links: list["TicketTagLink"] = Relationship(
+        back_populates="tag",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"
+        }
+    )
 
 
 class TicketBase(SQLModel):
