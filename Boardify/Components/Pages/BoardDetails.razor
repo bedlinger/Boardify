@@ -47,7 +47,7 @@
                     <div class="text-lg @(ticket.IsDone ? "line-through" : "")">@ticket.Title</div>
                     @if (ticket.Tags.Any())
                     {
-                        <div class="flex flex-wrap gap-2 mt-3">
+                        <div class="flex flex-wrap gap-2">
                             @foreach (var tag in ticket.Tags)
                             {
                                 <div class="badge badge-soft badge-primary badge-sm">
