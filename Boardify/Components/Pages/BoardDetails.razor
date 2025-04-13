@@ -198,6 +198,7 @@
     private void HandleTicketUpdated(Ticket updatedTicket)
     {
         UpdateTicketInCollection(updatedTicket);
+        _detailsModal.RefreshTicket(updatedTicket);
     }
 
     private void UpdateTicketInCollection(Ticket ticket)

@@ -73,8 +73,6 @@
         {
             await OnEdit.InvokeAsync(_ticket);
         }
-
-        Close();
     }
 
     private async Task HandleDelete()
@@ -85,6 +83,13 @@
         }
 
         Close();
+    }
+    
+    public void RefreshTicket(Ticket updatedTicket)
+    {
+        if (_ticket == null || _ticket.Id != updatedTicket.Id) return;
+        _ticket = updatedTicket;
+        StateHasChanged();
     }
 
 }
