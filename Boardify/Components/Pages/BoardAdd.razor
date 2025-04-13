@@ -58,7 +58,7 @@
                 @foreach (var tag in _board.Tags)
                 {
                     <div @onclick="() => RemoveTag(tag.Nr)"
-                         class="badge badge-lg badge-primary badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
+                         class="badge badge-lg badge-primary gap-2 py-3 px-4 flex items-center cursor-pointer">
                         <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
                         <span class="material-icons text-xs pointer-events-none">close</span>
                     </div>
