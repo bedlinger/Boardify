@@ -77,7 +77,8 @@
         {
             Title = ticket.Title,
             Description = ticket.Description,
-            DueAt = ticket.DueAt
+            DueAt = ticket.DueAt,
+            TagNrs = ticket.Tags?.Select(t => t.Nr).ToList() ?? new List<int>()
         };
         _isOpen = true;
         StateHasChanged();
