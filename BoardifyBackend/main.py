@@ -122,7 +122,7 @@ def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession
     ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True, exclude={"tag_nrs"})
     db_ticket.sqlmodel_update(ticket_data)
 
-    if ticket.tag_nrs is not None:
+    if ticket.tag_nrs is not None and len(ticket.tag_nrs) > 0:
         session.exec(delete(TicketTagLink).where(TicketTagLink.ticket_id == ticket_id))
 
         for tag_nr in ticket.tag_nrs:
@@ -137,6 +137,8 @@ def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession
                     tag_nr=tag_nr
                 )
                 session.add(link)
+    elif ticket.tag_nrs is not None and len(ticket.tag_nrs) == 0:
+        session.exec(delete(TicketTagLink).where(TicketTagLink.ticket_id == ticket_id))
 
     session.add(db_ticket)
     session.commit()
