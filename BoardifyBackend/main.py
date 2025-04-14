@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, delete
 from sqlmodel import Session, select
 
 from database import create_db_and_tables, get_session
@@ -47,8 +47,9 @@ async def read_board(board_id: uuid.UUID, session: DbSession):
 
 @app.post("/boards", response_model=BoardPublic)
 def create_board(board: BoardCreate, session: DbSession):
-    db_board = Board(**board.model_dump(exclude={'stages'}))
+    db_board = Board(**board.model_dump(exclude={'stages', 'tags'}))
     db_board.stages = [Stage(**stage.model_dump(), board_id=db_board.id) for stage in board.stages]
+    db_board.tags = [Tag(**tag.model_dump(), board_id=db_board.id) for tag in board.tags]
     session.add(db_board)
     session.commit()
     session.refresh(db_board)
@@ -80,11 +81,30 @@ def delete_board(board_id: uuid.UUID, session: DbSession):
 
 @app.post("/tickets", response_model=TicketPublic)
 def create_ticket(board_id: uuid.UUID, ticket: TicketCreate, session: DbSession):
-    db_ticket = Ticket.model_validate(ticket)
+    ticket_data = ticket.model_dump(exclude={"tag_nrs"})
+    db_ticket = Ticket(**ticket_data)
     db_board = session.get(Board, board_id)
+    if not db_board:
+        raise HTTPException(status_code=404, detail="Board not found")
+
     db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_board.stages])
     db_ticket.board_id = board_id
     session.add(db_ticket)
+    session.flush()
+
+    for tag_nr in ticket.tag_nrs:
+        tag = session.exec(select(Tag).where(
+            Tag.board_id == board_id,
+            Tag.nr == tag_nr
+        )).first()
+        if tag:
+            link = TicketTagLink(
+                ticket_id=db_ticket.id,
+                tag_board_id=board_id,
+                tag_nr=tag_nr
+            )
+            session.add(link)
+
     session.commit()
     session.refresh(db_ticket)
     return db_ticket
@@ -95,10 +115,31 @@ def update_ticket(ticket_id: uuid.UUID, ticket: TicketUpdate, session: DbSession
     db_ticket = session.get(Ticket, ticket_id)
     if not db_ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
+
     if ticket.stage_nr:
         db_ticket.is_done = ticket.stage_nr == max([s.nr for s in db_ticket.board.stages])
-    ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True)
+
+    ticket_data = ticket.model_dump(exclude_unset=True, exclude_none=True, exclude={"tag_nrs"})
     db_ticket.sqlmodel_update(ticket_data)
+
+    if ticket.tag_nrs is not None and len(ticket.tag_nrs) > 0:
+        session.exec(delete(TicketTagLink).where(TicketTagLink.ticket_id == ticket_id))
+
+        for tag_nr in ticket.tag_nrs:
+            tag = session.exec(select(Tag).where(
+                Tag.board_id == db_ticket.board_id,
+                Tag.nr == tag_nr
+            )).first()
+            if tag:
+                link = TicketTagLink(
+                    ticket_id=db_ticket.id,
+                    tag_board_id=db_ticket.board_id,
+                    tag_nr=tag_nr
+                )
+                session.add(link)
+    elif ticket.tag_nrs is not None and len(ticket.tag_nrs) == 0:
+        session.exec(delete(TicketTagLink).where(TicketTagLink.ticket_id == ticket_id))
+
     session.add(db_ticket)
     session.commit()
     session.refresh(db_ticket)

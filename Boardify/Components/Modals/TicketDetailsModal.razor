@@ -1,0 +1,95 @@
+@inject BackendService BackendService
+
+@if (_isOpen && _ticket != null)
+{
+    <div class="modal modal-open">
+        <div class="modal-box !w-full">
+            <h3 class="flex items-center gap-2 text-lg">
+                <span class="font-bold">@_ticket.Title</span>
+                <span class="badge badge-sm font-normal">
+                    @Board.Stages.Find(s => s.Nr == _ticket.StageNr)?.Name
+                </span>
+            </h3>
+            <div class="text-gray-400">
+                Erstellt am @_ticket.CreatedDateFormatted
+                @if (_ticket.DueAt != null)
+                {
+                    <span>, fällig am @_ticket.DueDateFormatted</span>
+                }
+            </div>
+            @if (_ticket.Tags.Any())
+            {
+                <div class="flex flex-wrap gap-2 mt-3">
+                    @foreach (var tag in _ticket.Tags)
+                    {
+                        <div class="badge badge-soft badge-primary badge-sm">
+                            <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">
+                                @tag.Name
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+            <div class="max-h-96 overflow-auto py-4">@_ticket.Description</div>
+            <div class="modal-action !flex !justify-between !bg-white">
+                <div class="flex gap-2">
+                    <button class="btn btn-error btn-soft" @onclick="HandleDelete">
+                        <span class="material-icons">delete</span>
+                    </button>
+                    <button class="btn btn-info btn-soft" @onclick="HandleEdit">
+                        <span class="material-icons">edit</span>
+                    </button>
+                </div>
+                <button class="btn" @onclick="Close">Schließen</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Board Board { get; set; } = null!;
+    [Parameter] public EventCallback<Ticket> OnEdit { get; set; }
+    [Parameter] public EventCallback<Ticket> OnDelete { get; set; }
+
+    private bool _isOpen;
+    private Ticket? _ticket;
+
+    public void Open(Ticket ticketToShow)
+    {
+        _ticket = ticketToShow;
+        _isOpen = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleEdit()
+    {
+        if (_ticket != null)
+        {
+            await OnEdit.InvokeAsync(_ticket);
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (_ticket != null)
+        {
+            await OnDelete.InvokeAsync(_ticket);
+        }
+
+        Close();
+    }
+    
+    public void RefreshTicket(Ticket updatedTicket)
+    {
+        if (_ticket == null || _ticket.Id != updatedTicket.Id) return;
+        _ticket = updatedTicket;
+        StateHasChanged();
+    }
+
+}

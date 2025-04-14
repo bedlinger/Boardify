@@ -12,10 +12,7 @@ builder.Services.AddHttpClient<BackendService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-}
+if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Error", true);
 
 app.UseStaticFiles();
 app.UseAntiforgery();

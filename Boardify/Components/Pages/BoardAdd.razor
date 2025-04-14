@@ -14,18 +14,20 @@
 <form @onsubmit="Submit">
     <fieldset class="fieldset">
         <label class="fieldset-legend" for="name">Name</label>
-        <InputText @bind-Value="board.Name" type="text" class="input !w-full" placeholder="Z.B. To-dos" id="name" required />
+        <InputText @bind-Value="_board.Name" type="text" class="input !w-full" placeholder="Z.B. To-dos" id="name"
+                   required/>
     </fieldset>
 
     <fieldset class="fieldset">
         <span class="fieldset-legend">Stages</span>
-        @for (int i = 0; i < board.Stages.Count; i++)
+        @for (var i = 0; i < _board.Stages.Count; i++)
         {
-            int buffer = i;
+            var buffer = i;
             <div class="flex items-center gap-2">
                 <label for=@i class="ml-4 w-4">@(i + 1).</label>
-                <InputText @bind-Value="board.Stages[buffer].Name" type="text" class="input" id="@i" />
-                <button type="button" href="/add" class="btn btn-error btn-soft btn-circle material-icons" @onclick="() => RemoveStage(buffer)">
+                <InputText @bind-Value="_board.Stages[buffer].Name" type="text" class="input" id="@i"/>
+                <button type="button" href="/add" class="btn btn-error btn-soft btn-circle material-icons"
+                        @onclick="() => RemoveStage(buffer)">
                     remove
                 </button>
             </div>
@@ -40,31 +42,97 @@
         </div>
     </fieldset>
 
-    <button type="submit" class="btn btn-primary mt-4 w-full">Erstellen</button>  
+    <fieldset class="fieldset">
+        <span class="fieldset-legend">Tags</span>
+        <div class="flex items-center gap-3 mb-4">
+            <InputText @bind-Value="_tagName" type="text" class="input input-bordered flex-grow" placeholder="Z.B. Bug"
+                       id="tag"/>
+            <button type="button" class="btn btn-primary btn-sm btn-soft gap-1 min-w-[120px]" @onclick="() => AddTag(_tagName)">
+                <span class="material-icons text-sm">add</span>
+                Hinzufügen
+            </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            @if (_board.Tags.Any())
+            {
+                @foreach (var tag in _board.Tags)
+                {
+                    <div @onclick="() => RemoveTag(tag.Nr)"
+                         class="badge badge-primary badge-sm  gap-2 py-3 px-4 flex items-center cursor-pointer">
+                        <span class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                        <span class="material-icons text-xs pointer-events-none">close</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-sm text-gray-500 italic">Noch keine Tags hinzugefügt</div>
+            }
+        </div>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary mt-4 w-full">Erstellen</button>
 </form>
 
 
 @code {
-    private BoardCreate board = new BoardCreate()
+    private string _tagName = "";
+
+    private readonly BoardCreate _board = new()
+    {
+        Name = "",
+        Stages =
+        [
+            new Stage { Nr = 0, Name = "To-Do" },
+            new Stage { Nr = 1, Name = "In Arbeit" },
+            new Stage { Nr = 2, Name = "Erledigt" }
+        ],
+        Tags = []
+    };
+
+    private void AddStage()
+    {
+        _board.Stages.Add(new Stage { Nr = _board.Stages.Max(s => s.Nr) + 1, Name = "" });
+    }
+
+    private void RemoveStage(int index)
+    {
+        _board.Stages.RemoveAt(index);
+    }
+
+    private void AddTag(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        _board.Tags.Add(new Tag
         {
-            Name = "",
-            Stages = [
-                new Stage() { Nr=0, Name = "To-Do" },
-                new Stage() { Nr=1, Name = "In Arbeit" },
-                new Stage() { Nr=2, Name = "Erledigt" }
-            ]
-        };
-
-    private void AddStage() {
-        board.Stages.Add(new Stage() { Nr = board.Stages.Max(s => s.Nr)+1, Name = "" });
+            Nr = !_board.Tags.Any() ? 1 : _board.Tags.Max(t => t.Nr) + 1,
+            Name = name
+        });
+        _tagName = "";
     }
 
-    private void RemoveStage(int index) {
-        board.Stages.RemoveAt(index);
+    private void RemoveTag(int nr)
+    {
+        _board.Tags.RemoveAll(t => t.Nr == nr);
     }
 
-    private async void Submit() {
-        var createdBoard = await BackendService.CreateBoard(board);
-        NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
+    private async Task Submit()
+    {
+        try
+        {
+            var createdBoard = await BackendService.CreateBoard(_board);
+            NavigationManager.NavigateTo($"/board/{createdBoard.Id}");
+        }
+        catch (HttpRequestException ex)
+        {
+            await Console.Error.WriteLineAsync($"Network error creating board: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error creating board: {ex.Message}");
+        }
     }
+
 }
