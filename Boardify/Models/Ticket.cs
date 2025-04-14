@@ -47,5 +47,5 @@ public class TicketUpdate
 
     [JsonPropertyName("due_at")] public DateTime? DueAt { get; set; }
 
-    [JsonPropertyName("tag_nrs")] public List<int> TagNrs { get; set; } = new();
+    [JsonPropertyName("tag_nrs")] public List<int>? TagNrs { get; set; } = null;
 }
