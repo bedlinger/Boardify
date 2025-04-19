@@ -2,7 +2,6 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, delete
 from sqlmodel import Session, select
 
@@ -22,7 +21,7 @@ def on_startup():
 
 
 @app.post("/register", response_model=UserResponse)
-async def register(user: UserCreate, session: DbSession):
+async def register(user: UserCredentials, session: DbSession):
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -36,11 +35,11 @@ async def register(user: UserCreate, session: DbSession):
 
 
 @app.post("/login", response_model=Token)
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: DbSession):
-    user = session.exec(select(User).where(User.username == form_data.username)).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+async def login(credentials: UserCredentials, session: DbSession):
+    user = session.exec(select(User).where(User.username == credentials.username)).first()
+    if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password",
-                            headers={"WWW-Authenticate": "Bearer"}, )
+            headers={"WWW-Authenticate": "Bearer"}, )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}

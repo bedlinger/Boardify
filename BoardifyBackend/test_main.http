@@ -9,15 +9,17 @@ Content-Type: application/json
 
 ### Login with the user
 POST http://127.0.0.1:8000/login
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-username = testuser3 &
-password = password123
+{
+  "username": "testuser3",
+  "password": "password123"
+}
 
 ### Create a board with authentication
 POST http://127.0.0.1:8000/boards
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlcjMiLCJleHAiOjE3NDUwOTE4NDd9.snI6p3QfN_kJgN5LF5yLHl0Pw9v-LcO2Bp26--EmrQk
+Authorization: Bearer TOKEN_HERE
 
 {
   "name": "Test Board",
