@@ -4,18 +4,20 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 
 
+class User(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    hashed_password: str
+
+
 class TicketTagLink(SQLModel, table=True):
     ticket_id: uuid.UUID = Field(foreign_key="ticket.id", primary_key=True)
     tag_board_id: uuid.UUID = Field(foreign_key="tag.board_id", primary_key=True)
     tag_nr: int = Field(foreign_key="tag.nr", primary_key=True)
 
     ticket: "Ticket" = Relationship(back_populates="tag_links")
-    tag: "Tag" = Relationship(
-        back_populates="ticket_links",
-        sa_relationship_kwargs={
-            "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"
-        }
-    )
+    tag: "Tag" = Relationship(back_populates="ticket_links", sa_relationship_kwargs={
+        "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"})
 
 
 class TagBase(SQLModel):
@@ -26,12 +28,8 @@ class TagBase(SQLModel):
 class Tag(TagBase, table=True):
     board_id: uuid.UUID = Field(primary_key=True, foreign_key="board.id")
     board: "Board" = Relationship(back_populates="tags")
-    ticket_links: list["TicketTagLink"] = Relationship(
-        back_populates="tag",
-        sa_relationship_kwargs={
-            "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"
-        }
-    )
+    ticket_links: list["TicketTagLink"] = Relationship(back_populates="tag", sa_relationship_kwargs={
+        "primaryjoin": "and_(Tag.board_id==TicketTagLink.tag_board_id, Tag.nr==TicketTagLink.tag_nr)"})
 
 
 class TicketBase(SQLModel):

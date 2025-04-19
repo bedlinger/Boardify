@@ -1,6 +1,23 @@
 from models import *
 
 
+class UserBase(SQLModel):
+    username: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserResponse(UserBase):
+    id: uuid.UUID
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
 class TagPublic(TagBase):
     pass
 
