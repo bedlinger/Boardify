@@ -6,13 +6,13 @@ from httpx import AsyncClient
 async def test_authentication_and_authorization():
     async with AsyncClient(base_url="http://127.0.0.1:8000/") as client:
         response = await client.post("/register", json={
-            "username": "testuser2",
+            "username": "testuser3",
             "password": "password123"
         })
         assert response.status_code == 200
 
-        response = await client.post("/token", data={
-            "username": "testuser2",
+        response = await client.post("/login", data={
+            "username": "testuser3",
             "password": "password123"
         })
         assert response.status_code == 200
