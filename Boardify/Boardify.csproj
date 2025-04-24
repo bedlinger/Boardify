@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Blazored.LocalStorage" Version="4.5.0"/>
+    </ItemGroup>
+
     <Target Name="CheckForNpm" BeforeTargets="NpmInstall" Condition="'$(Configuration)' == 'Debug'">
         <Exec Command="npm -v" ContinueOnError="true">
             <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>

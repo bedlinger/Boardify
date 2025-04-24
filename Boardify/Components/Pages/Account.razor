@@ -1,0 +1,102 @@
+@page "/account"
+@rendermode InteractiveServer
+@inject BackendService BackendService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Konto - Boardify</PageTitle>
+
+<div class="mb-6">
+    <a href="/" class="btn btn-outline btn-primary btn-sm mb-2">
+        <span class="material-icons">
+            arrow_back
+        </span>
+        Zurück
+    </a>
+    <h2 class="text-3xl font-bold">Mein Konto</h2>
+</div>
+
+@if (_isLoading)
+{
+    <div class="flex justify-center my-8">
+        <span class="loading loading-spinner loading-lg"></span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-error mb-4">
+        <span>@_errorMessage</span>
+    </div>
+}
+else if (_user != null)
+{
+    <div class="card bg-white shadow-md p-6 max-w-2xl">
+        <div class="mb-6">
+            <div class="text-lg font-semibold mb-1">Username</div>
+            <div class="text-gray-700 bg-gray-100 p-3 rounded">@_user.Username</div>
+        </div>
+
+        <div class="mb-6">
+            <div class="text-lg font-semibold mb-1">Account ID</div>
+            <div class="text-gray-700 bg-gray-100 p-3 rounded">@_user.Id</div>
+        </div>
+
+        <div class="flex justify-end">
+            <button @onclick="Logout" class="btn btn-error">
+                <span class="material-icons mr-2">logout</span>
+                Abmelden
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private User? _user;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _user = await BackendService.GetUser();
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = "Fehler beim Laden der Kontodaten. Bitte versuchen Sie es erneut.";
+            await Console.Error.WriteLineAsync($"Error loading user data: {ex.Message}");
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Ein unerwarteter Fehler ist aufgetreten.";
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            await BackendService.Logout();
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Fehler beim Abmelden.";
+            await Console.Error.WriteLineAsync($"Logout error: {ex.Message}");
+        }
+    }
+
+}
