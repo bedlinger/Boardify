@@ -20,7 +20,7 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/register", response_model=UserResponse)
+@app.post("/users/register", response_model=UserResponse)
 async def register(user: UserCredentials, session: DbSession):
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
@@ -34,7 +34,7 @@ async def register(user: UserCredentials, session: DbSession):
     return db_user
 
 
-@app.post("/login", response_model=Token)
+@app.post("/users/login", response_model=Token)
 async def login(credentials: UserCredentials, session: DbSession):
     user = session.exec(select(User).where(User.username == credentials.username)).first()
     if not user or not verify_password(credentials.password, user.hashed_password):
