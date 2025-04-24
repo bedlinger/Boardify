@@ -51,7 +51,8 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]
 
 
 @app.get("/boards", response_model=list[BoardOverview])
-async def read_boards(session: DbSession):
+async def read_boards(session: DbSession,
+                  current_user: Annotated[User, Depends(get_current_user)]):
     results = session.exec(select(Board, func.count(Ticket.id).label("total_tickets"),
                                   func.count(func.nullif(Ticket.is_done, False)).label("done_tickets")).join(Ticket,
                                                                                                              isouter=True).group_by(
@@ -66,7 +67,8 @@ async def read_boards(session: DbSession):
 
 
 @app.get("/boards/{board_id}", response_model=BoardPublic)
-async def read_board(board_id: uuid.UUID, session: DbSession):
+async def read_board(board_id: uuid.UUID, session: DbSession,
+                  current_user: Annotated[User, Depends(get_current_user)]):
     board = session.get(Board, board_id)
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
