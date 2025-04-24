@@ -1,6 +1,8 @@
+import os
 from datetime import timedelta
 from typing import Annotated
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy import func, delete
 from sqlmodel import Session, select
@@ -18,10 +20,14 @@ DbSession = Annotated[Session, Depends(get_session)]
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    load_dotenv()
 
 
 @app.post("/users/register", response_model=UserResponse)
 async def register(user: UserCredentials, session: DbSession):
+    is_registration_disabled = os.getenv("DISABLE_REGISTRATION", "false").lower() == "true"
+    if is_registration_disabled:
+        raise HTTPException(status_code=403, detail="Registration is disabled")
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
