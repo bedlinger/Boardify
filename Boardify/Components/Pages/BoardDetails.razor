@@ -1,4 +1,5 @@
 ﻿@page "/board/{id}"
+@using System.Globalization
 @using Boardify.Components.Modals
 @layout FullLayout
 @rendermode InteractiveServer
@@ -40,7 +41,7 @@ else
             <span class="material-icons">home</span>
         </a>
     </div>
-    
+
     <div class="mb-5">
         <div class="w-full flex gap-2">
             <div class="join w-full">
@@ -60,7 +61,7 @@ else
             <div class="text-error text-sm mt-1">@_searchError</div>
         }
     </div>
-    
+
     @if (_showSearchHelp)
     {
         <div class="modal modal-open">
@@ -77,7 +78,8 @@ else
                         <li><code>due:dd.mm.yyyy</code> - Sucht nach Tickets mit dem Fälligkeitsdatum</li>
                     </ul>
                     <p class="mt-2">Mehrere Suchkriterien mit Komma trennen: <code>title:wichtig,tag:dringend</code></p>
-                    <p class="mt-2">Ohne Attribut wird überall gesucht: <code>wichtig</code> findet Tickets mit "wichtig"
+                    <p class="mt-2">Ohne Attribut wird überall gesucht: <code>wichtig</code> findet Tickets mit
+                        "wichtig"
                         irgendwo</p>
                     <div class="bg-base-200 p-3 rounded-lg mt-3">
                         <p class="font-semibold">Beispiele:</p>
@@ -182,11 +184,11 @@ else
     private string _searchQuery = "";
     private string _searchError = "";
     private readonly Dictionary<string, string[]> _activeFilters = new();
-    private bool _showSearchHelp = false;
+    private bool _showSearchHelp;
     private bool _isLoading;
     private string? _errorMessage;
     private bool _isLoggedIn;
-    
+
     private TicketDetailsModal _detailsModal = null!;
     private TicketAddModal _addModal = null!;
     private TicketEditModal _editModal = null!;
@@ -274,7 +276,7 @@ else
 
         if (_activeFilters.TryGetValue("done", out var doneTerms))
         {
-            if (doneTerms.Length > 0 && bool.TryParse(doneTerms[0], out bool isDone))
+            if (doneTerms.Length > 0 && bool.TryParse(doneTerms[0], out var isDone))
             {
                 if (ticket.IsDone != isDone)
                 {
@@ -290,7 +292,7 @@ else
         }
 
         if (!DateTime.TryParseExact(dueTerms[0], "dd.MM.yyyy", null,
-                System.Globalization.DateTimeStyles.None, out var dueDate)) return true;
+                DateTimeStyles.None, out var dueDate)) return true;
         return ticket.DueAt?.Date == dueDate.Date;
     }
 

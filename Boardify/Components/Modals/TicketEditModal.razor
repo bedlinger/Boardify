@@ -22,37 +22,36 @@
                     <InputDate @bind-Value="_ticketUpdate.DueAt" class="input !w-full" id="dueDate"/>
                     <p class="fieldset-label">Optional</p>
                 </fieldset>
-                <fieldset class="fieldset">
-                    <label class="fieldset-legend">Tags</label>
-                    <div class="flex flex-wrap gap-2 mb-2">
-                        @foreach (var tag in Board.Tags)
-                        {
-                            @if (IsTagSelected(tag.Nr))
+                @if (Board.Tags.Any())
+                {
+                    <fieldset class="fieldset">
+                        <label class="fieldset-legend">Tags</label>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            @foreach (var tag in Board.Tags)
                             {
-                                <div @onclick="() => ToggleTag(tag, false)"
-                                     class="badge badge-primary badge-sm gap-2 py-3 px-4 flex items-center cursor-pointer">
-                                    <span
-                                        class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
-                                    <span class="material-icons text-xs pointer-events-none">close</span>
-                                </div>
+                                @if (IsTagSelected(tag.Nr))
+                                {
+                                    <div @onclick="() => ToggleTag(tag, false)"
+                                         class="badge badge-primary badge-sm gap-2 py-3 px-4 flex items-center cursor-pointer">
+                                        <span
+                                            class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                        <span class="material-icons text-xs pointer-events-none">close</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div @onclick="() => ToggleTag(tag, true)"
+                                         class="badge badge-primary badge-sm badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
+                                        <span
+                                            class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
+                                        <span class="material-icons text-xs pointer-events-none">add</span>
+                                    </div>
+                                }
                             }
-                            else
-                            {
-                                <div @onclick="() => ToggleTag(tag, true)"
-                                     class="badge badge-primary badge-sm badge-outline gap-2 py-3 px-4 flex items-center cursor-pointer">
-                                    <span
-                                        class="text-sm font-medium truncate max-w-[150px] pointer-events-none">@tag.Name</span>
-                                    <span class="material-icons text-xs pointer-events-none">add</span>
-                                </div>
-                            }
-                        }
-                    </div>
-                    @if (!Board.Tags.Any())
-                    {
-                        <div class="text-sm text-gray-500 italic">Keine Tags verfügbar</div>
-                    }
-                    <p class="fieldset-label">Optional</p>
-                </fieldset>
+                        </div>
+                        <p class="fieldset-label">Optional</p>
+                    </fieldset>
+                }
             </div>
             <div class="modal-action">
                 <button class="btn btn-primary" type="submit">Ändern</button>
