@@ -9,6 +9,11 @@ services:
     expose:
       - 8000
     restart: always
+    environment:
+      - JWT_SECRET_KEY=PasteYourSecretKeyHere
+      - JWT_ALGORITHM=PutYourAlgorithmHere
+      - ACCESS_TOKEN_EXPIRE_MINUTES=PutYourExpireTimeHere
+      - DISABLE_REGISTRATION=DecideIfYouWantToDisableRegistration
   frontend:
     build: ./Boardify
     ports:
