@@ -153,6 +153,40 @@ else
     </div>
 }
 
+@if (_showSearchHelp)
+{
+    <div class="modal modal-open">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Suche Hilfe</h3>
+            <div class="py-4">
+                <p class="mb-2">Verwende folgende Syntax, um Tickets zu filtern:</p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><code>title:wert</code> - Sucht nach Tickets mit dem Wort "wert" im Titel</li>
+                    <li><code>desc:wert</code> - Sucht nach Tickets mit dem Wort "wert" in der Beschreibung</li>
+                    <li><code>tag:wert</code> - Sucht nach Tickets mit dem Tag "wert"</li>
+                    <li><code>stage:wert</code> - Sucht nach Tickets in der Stage "wert"</li>
+                    <li><code>done:true/false</code> - Sucht nach erledigten/nicht erledigten Tickets</li>
+                    <li><code>due:dd.mm.yyyy</code> - Sucht nach Tickets mit dem Fälligkeitsdatum</li>
+                </ul>
+                <p class="mt-2">Mehrere Suchkriterien mit Komma trennen: <code>title:wichtig,tag:dringend</code></p>
+                <p class="mt-2">Ohne Attribut wird überall gesucht: <code>wichtig</code> findet Tickets mit "wichtig"
+                    irgendwo</p>
+                <div class="bg-base-200 p-3 rounded-lg mt-3">
+                    <p class="font-semibold">Beispiele:</p>
+                    <ul class="list-disc ml-6">
+                        <li><code>tag:dringend,done:false</code> - Unerledigte Tickets mit Tag "dringend"</li>
+                        <li><code>title:bug</code> - Tickets mit "bug" im Titel</li>
+                        <li><code>bug</code> - Tickets mit "bug" irgendwo</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button class="btn" @onclick="() => _showSearchHelp = false">Schließen</button>
+            </div>
+        </div>
+    </div>
+}
+
 <TicketDetailsModal @ref="_detailsModal"
                     Board="_board"
                     OnEdit="OpenEdit"

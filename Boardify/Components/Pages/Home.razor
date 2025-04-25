@@ -109,12 +109,10 @@ else
 @code {
     private List<BoardOverview> _boards = new();
     private string? _searchTerm;
-
     private IEnumerable<BoardOverview> FilteredBoards =>
         string.IsNullOrWhiteSpace(_searchTerm)
             ? _boards
             : _boards.Where(b => b.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
-
     private bool _isLoggedIn;
     private bool _isLoading;
     private string? _errorMessage;
@@ -170,5 +168,4 @@ else
         _boards.Clear();
         NavigationManager.NavigateTo("/");
     }
-
 }

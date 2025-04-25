@@ -355,7 +355,8 @@
     gap: calc(var(--spacing) * 3);
   }
   .space-y-1 {
-    :where(& > :not(:last-child)) {
+    :where(& > :not(:l
+    st-child)) {
       --tw-space-y-reverse: 0;
       margin-block-start: calc(calc(var(--spacing) * 1) * var(--tw-space-y-reverse));
       margin-block-end: calc(calc(var(--spacing) * 1) * calc(1 - var(--tw-space-y-reverse)));
