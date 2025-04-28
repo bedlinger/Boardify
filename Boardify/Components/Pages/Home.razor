@@ -1,86 +1,148 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject BackendService BackendService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Boardify</PageTitle>
 
-<div class="flex-col gap-2 mb-3">
-    <div class="mb-2 flex items-center justify-between">
-        <h1 class="text-5xl font-bold">Boardify</h1>
-        <a href="/add" class="btn btn-primary flex">
-        <span class="material-icons">
-            add
-        </span>
-            Board erstellen
-        </a>
-    </div>
-
-    <div class="w-full">
-        <div class="join w-full">
-            <input @bind="_searchTerm" @bind:event="oninput" type="text" placeholder="Suche"
-                   class="input input-bordered join-item flex-grow"/>
-            <button class="btn btn-primary join-item rounded-r-3xl">
-            <span class="material-icons">
-                search
-            </span>
+<div class="mb-6 flex items-center justify-between">
+    <h1 class="text-5xl font-bold">Boardify</h1>
+    <div class="flex items-center gap-2">
+        @if (_isLoggedIn)
+        {
+            <a href="/add" class="btn btn-primary flex">
+                <span class="material-icons">add</span>
+                Board erstellen
+            </a>
+            <a href="/account" class="btn btn-outline">
+                <span class="material-icons">account_circle</span>
+                Konto
+            </a>
+            <button @onclick="Logout" class="btn btn-outline btn-error">
+                <span class="material-icons">logout</span>
+                Abmelden
             </button>
-        </div>
+        }
+        else
+        {
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/register" class="btn btn-outline">Registrieren</a>
+        }
     </div>
 </div>
 
-<div class="flex flex-col gap-3">
-    @if (!FilteredBoards.Any())
-    {
-        <div class="text-center p-4">
-            <p class="text-gray-500">Keine Boards gefunden</p>
-        </div>
-    }
-    @foreach (var board in FilteredBoards)
-    {
-        var id = board.Id;
-        <div class="relative">
-            <a href="/board/@board.Id"
-               class="flex items-center justify-between rounded-md p-4 shadow-md hover:shadow-lg">
-                <div class="flex flex-col">
-                    <span class="text-xl font-bold">@board.Name</span>
-                    <span
-                        class="text-gray-400">@board.TicketsCount Tickets, davon @board.DoneTicketsCount erledigt</span>
-                </div>
-            </a>
-            <div class="absolute top-2 right-2">
-                <details class="dropdown">
-                    <summary class="btn btn-circle btn-ghost">
+@if (_isLoading)
+{
+    <div class="flex justify-center my-8">
+        <span class="loading loading-spinner loading-lg"></span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-error mb-4">
+        <span>@_errorMessage</span>
+    </div>
+}
+else if (_boards.Any())
+{
+    <div class="flex flex-col gap-3">
+        @if (!FilteredBoards.Any())
+        {
+            <div class="text-center p-4">
+                <p class="text-gray-500">Keine Boards gefunden</p>
+            </div>
+        }
+        <div class="w-full">
+            <div class="join w-full">
+                <input @bind="_searchTerm" @bind:event="oninput" type="text" placeholder="Suche"
+                       class="input input-bordered join-item flex-grow"/>
+                <button class="btn btn-primary join-item rounded-r-3xl">
                         <span class="material-icons">
-                            more_vert
+                            search
                         </span>
-                    </summary>
-                    <ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-                        <li>
-                            <button class="text-red-700" @onclick="() => Delete(id)">Löschen</button>
-                        </li>
-                    </ul>
-                </details>
+                </button>
             </div>
         </div>
-    }
-</div>
+        @foreach (var board in FilteredBoards)
+        {
+            var id = board.Id;
+            <div class="relative">
+                <a href="/board/@board.Id"
+                   class="flex items-center justify-between rounded-md p-4 shadow-md hover:shadow-lg">
+                    <div class="flex flex-col">
+                        <span class="text-xl font-bold">@board.Name</span>
+                        <span
+                            class="text-gray-400">@board.TicketsCount Tickets, davon @board.DoneTicketsCount erledigt</span>
+                    </div>
+                </a>
+                <div class="absolute top-2 right-2">
+                    <details class="dropdown">
+                        <summary class="btn btn-circle btn-ghost">
+                            <span class="material-icons">
+                                more_vert
+                            </span>
+                        </summary>
+                        <ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                            <li>
+                                <button class="text-red-700" @onclick="() => Delete(id)">Löschen</button>
+                            </li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (_isLoggedIn)
+{
+    <div class="text-center my-8 text-gray-500">
+        <p>Keine Boards gefunden. Klicken Sie auf "Board erstellen", um zu beginnen.</p>
+    </div>
+}
+else
+{
+    <div class="text-center my-8 text-gray-500">
+        <p>Bitte melden Sie sich an, um Boards zu sehen.</p>
+    </div>
+}
 
 @code {
     private List<BoardOverview> _boards = new();
     private string? _searchTerm;
-    private string? _errorMessage;
-
     private IEnumerable<BoardOverview> FilteredBoards =>
         string.IsNullOrWhiteSpace(_searchTerm)
             ? _boards
             : _boards.Where(b => b.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+    private bool _isLoggedIn;
+    private bool _isLoading;
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        _boards = await BackendService.GetBoardsOverview();
+        _isLoading = true;
+        try
+        {
+            _isLoggedIn = await BackendService.IsLoggedIn();
+            if (_isLoggedIn)
+            {
+                _boards = await BackendService.GetBoardsOverview();
+            }
+            else
+            {
+                _boards = new List<BoardOverview>();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Fehler beim Laden der Daten.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
-    async Task Delete(string id)
+    private async Task Delete(string id)
     {
         try
         {
@@ -99,4 +161,11 @@
         }
     }
 
+    private async Task Logout()
+    {
+        await BackendService.Logout();
+        _isLoggedIn = false;
+        _boards.Clear();
+        NavigationManager.NavigateTo("/");
+    }
 }

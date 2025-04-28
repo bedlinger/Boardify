@@ -47,7 +47,8 @@
         <div class="flex items-center gap-3 mb-4">
             <InputText @bind-Value="_tagName" type="text" class="input input-bordered flex-grow" placeholder="Z.B. Bug"
                        id="tag"/>
-            <button type="button" class="btn btn-primary btn-sm btn-soft gap-1 min-w-[120px]" @onclick="() => AddTag(_tagName)">
+            <button type="button" class="btn btn-primary btn-sm btn-soft gap-1 min-w-[120px]"
+                    @onclick="() => AddTag(_tagName)">
                 <span class="material-icons text-sm">add</span>
                 Hinzufügen
             </button>

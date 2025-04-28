@@ -1,11 +1,58 @@
-# Test your FastAPI endpoints
+### Register a user
+POST http://127.0.0.1:8000/users/register
+Content-Type: application/json
 
-GET http://127.0.0.1:8000/
-Accept: application/json
+{
+  "username": "testuser3",
+  "password": "password123"
+}
 
-###
+### Login with the user
+POST http://127.0.0.1:8000/users/login
+Content-Type: application/json
 
-GET http://127.0.0.1:8000/hello/User
-Accept: application/json
+{
+  "username": "testuser3",
+  "password": "password123"
+}
 
-###
+### Create a board with authentication
+POST http://127.0.0.1:8000/boards
+Content-Type: application/json
+Authorization: Bearer TOKEN_HERE
+
+{
+  "name": "Test Board",
+  "stages": [
+    {
+      "nr": 1,
+      "name": "To Do"
+    }
+  ],
+  "tags": [
+    {
+      "nr": 1,
+      "name": "Bug"
+    }
+  ]
+}
+
+### Try to create a board without authentication (should return 401)
+POST http://127.0.0.1:8000/boards
+Content-Type: application/json
+
+{
+  "name": "Unauthorized Board",
+  "stages": [
+    {
+      "nr": 1,
+      "name": "To Do"
+    }
+  ],
+  "tags": [
+    {
+      "nr": 1,
+      "name": "Bug"
+    }
+  ]
+}
